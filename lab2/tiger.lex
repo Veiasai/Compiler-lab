@@ -61,7 +61,7 @@ void str_add(char c) {
 
 %}
   /* You can add lex definitions here. */
-%x COMMENT STR VSTR
+%x COMMENT STR 
 
 %%
   /* 
@@ -69,7 +69,6 @@ void str_add(char c) {
   * and write reguler expressions and actions of your own.
   */ 
     int comment = 0;
-    bool flag;
 
 <COMMENT>{
     "/*" {adjust(); comment++;}
@@ -81,30 +80,21 @@ void str_add(char c) {
 }
 
 <STR>{
-    \" {charPos+=yyleng; yylval.sval = strlen(str) ? String(str) : 0; BEGIN(0); if(flag) return STRING;}
-    \\f {charPos+=yyleng; BEGIN(VSTR);}
+    \" {charPos+=yyleng; yylval.sval = strlen(str) ? String(str) : 0; BEGIN(0); return STRING;}
+    \\\n[ \t]*\\ {charPos+=yyleng;}
     \\n  {charPos+=yyleng; str_add('\n');}
     \\t {charPos+=yyleng; str_add('\t');}
-    \\^[a-zA-Z] charPos+=yyleng;
-    \\[0-9]{3}  {charPos+=yyleng; str_add(atoi(yytext+1));}
+    \\^[A-Z] {charPos+=yyleng; str_add(yytext[2]-'A'+1);}
+    \\[0-9][0-9][0-9]  {charPos+=yyleng; str_add(atoi(yytext+1));}
     \\\"    {charPos+=yyleng; str_add('\"');}
     \\\\    {charPos+=yyleng; str_add('\\');}
-    \\[^ntf\"\\] {charPos+=yyleng; flag = FALSE; EM_error(EM_tokPos, "unknown escape sequence: '\\%c'", yytext[1]);}
-    \n   {charPos+=yyleng; str_add('\n');}
     . {charPos+=yyleng; str_add(yytext[0]);}
     <<EOF>> {adjust(); EM_error(EM_tokPos,"EOF in string");  return 0;}
 }
 
-<VSTR>{
-    f\\ {adjust(); BEGIN(STR);}
-    \n   {adjust(); EM_newline();}
-    .    adjust(); 
-    <<EOF>> {adjust(); EM_error(EM_tokPos,"EOF in string"); return 0;}
-}
-
 "/*" {adjust(); comment++; BEGIN(COMMENT);}
 
-\"   {adjust(); str_init(); flag = TRUE; BEGIN(STR);}
+\"   {adjust(); str_init(); BEGIN(STR);}
 
 [ \t]*   {adjust(); continue;}
 
