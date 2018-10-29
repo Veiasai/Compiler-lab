@@ -31,3 +31,7 @@ struct expty expTy(Tr_exp exp, Ty_ty ty)
 	return e;
 }
 
+void SEM_transProg(A_exp exp){
+	
+}
+
