@@ -15,7 +15,7 @@ T_stmList T_StmList(T_stm head, T_stmList tail)
  p->head=head; p->tail=tail;
  return p;
 }
- 
+
 T_stm T_Seq(T_stm left, T_stm right)
 {T_stm p = (T_stm) checked_malloc(sizeof *p);
  p->kind=T_SEQ;
