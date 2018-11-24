@@ -23,7 +23,7 @@ static unsigned int hash(char *s0)
        h = h*65599 + *s;
  return h;
 }
- 
+
 static int streq(string a, string b)
 {
  return !strcmp(a,b);

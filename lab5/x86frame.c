@@ -26,11 +26,14 @@ struct F_frame_ {
 	Temp_label label;
 };
 
+static F_access InFrame(int offset);
+static F_access InReg(Temp_temp reg);
+
 const int F_wordSize = 8;		//x86: 64bit
 static const int F_keep = 6;	//number of parameters kept in regs;
 
 
-/* my implementation */
+/* function implementation */
 F_accessList F_AccessList(F_access head, F_accessList tail) {
 	F_accessList l = checked_malloc(sizeof(*l));
 	l->head = head;
@@ -38,7 +41,7 @@ F_accessList F_AccessList(F_access head, F_accessList tail) {
 	return l;
 }
 
-// frame
+// miss
 Temp_temp F_FP() {
 	static Temp_temp t = NULL;
 	if (!t)
@@ -46,7 +49,7 @@ Temp_temp F_FP() {
 	return t;
 }
 
-// register
+// miss
 Temp_temp F_RV() {
 	static Temp_temp t = NULL;
 	if (!t)

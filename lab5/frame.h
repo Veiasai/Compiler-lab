@@ -11,6 +11,7 @@ typedef struct F_frame_ *F_frame;
 typedef struct F_access_ *F_access;
 typedef struct F_accessList_ *F_accessList;
 
+// the frame->access->head is static link, tail -> others
 struct F_accessList_ {F_access head; F_accessList tail;};
 
 /* temp */
@@ -53,6 +54,6 @@ struct F_fragList_
 
 F_fragList F_FragList(F_frag head, F_fragList tail);
 
-T_stm F_procEntryExit1(F_frame frame, T_stm stm);
+T_stm F_procEntryExit1(F_frame frame, T_stm stm); // TODO
 
 #endif

@@ -15,16 +15,19 @@ extern const int F_wordSize;
 
 //LAB5: you can modify anything you want.
 
+
+
+/*
+* assert用在参数为指针的函数中，为了让程序宕在出错的地方，并且提供信息
+* assert用在default分支，发现未被处理的地方
+*/
+
+/**************/
 struct Tr_access_ {
 	Tr_level level;
 	F_access access;
 };
 
-
-struct Tr_accessList_ {
-	Tr_access head;
-	Tr_accessList tail;	
-};
 
 struct Tr_level_ {
 	F_frame frame;
@@ -52,10 +55,29 @@ struct Tr_exp_ {
 	union {T_exp ex; T_stm nx; struct Cx cx; } u;
 };
 
-struct Tr_expList_ {
-	Tr_exp head;  
-	Tr_expList tail;
-};
+
+
+/** function **/
+
+static Tr_access Tr_Access(Tr_level level, F_access access);
+static Tr_accessList Tr_AccessList(Tr_access head, Tr_accessList tail);
+static Tr_accessList makeFormalList(Tr_level l);   //trans F_accessList to Tr_accessList
+
+
+static patchList PatchList(Temp_label *head, patchList tail);
+static patchList doPatch(patchList tList, Temp_label label);
+static patchList joinPatch(patchList first, patchList second);
+
+static Tr_exp Tr_Ex(T_exp ex);
+static Tr_exp Tr_Nx(T_stm nx);
+static Tr_exp Tr_Cx(patchList trues, patchList falses, T_stm stm);
+
+static T_exp unEx(Tr_exp e);
+static T_stm unNx(Tr_exp e);
+static struct Cx unCx(Tr_exp e);
+
+static T_exp trackLink(Tr_level l, Tr_level g);		//track static link from l to g
+static T_expList Tr_transExpList(Tr_expList l);
 
 /******* frame *******/
 
@@ -83,9 +105,9 @@ Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals) {
 	return l;
 }
 
-// Tr_accessList Tr_formals(Tr_level level) {
-// 	return level->formals;
-// }
+Tr_accessList Tr_formals(Tr_level level) {
+  return level->formals;
+}
 
 Tr_access Tr_allocLocal(Tr_level level, bool escape) {
 	return Tr_Access(level, F_allocLocal(level->frame, escape));
@@ -94,16 +116,23 @@ Tr_access Tr_allocLocal(Tr_level level, bool escape) {
 
 /******* ir tree *******/
 
-static F_fragList fragList = NULL;
+static F_fragList fragList = {NULL, NULL};
+static F_fragList frag_head = &fragList, frag_tail = &fragList;
 
 F_fragList Tr_getResult() {
-	return fragList;
+	return frag_head->tail;
+}
+
+static void Tr_addFrag(frag){
+	frag_tail->tail = F_FragList(frag, NULL);
+	frag_tail = frag_tail->tail;
 }
 
 void Tr_procEntryExit(Tr_level level, Tr_exp body, Tr_accessList formals) {
 	// todo:
 	F_frag frag = F_ProcFrag(unNx(body), level->frame);
-	fragList = F_FragList(frag, fragList);
+	Tr_addFrag(frag);
+	// fragList = F_FragList(frag, fragList);
 }
 
 Tr_exp Tr_null() {
@@ -126,16 +155,16 @@ Tr_exp Tr_subscriptVar(Tr_exp base, Tr_exp index) {
 						T_mul, unEx(index), T_Const(F_wordSize)))));
 }
 
-static Temp_temp nil = NULL;
-Tr_exp Tr_nilExp() {
-	if (!nil) {
-		nil = Temp_newtemp();
-		T_exp alloc = F_externalCall(String("malloc"), 
-									 T_ExpList(T_Const(0*F_wordSize), NULL));
-		return Tr_Ex(T_Eseq(T_Move(T_Temp(nil), alloc), T_Temp(nil)));
-	} else
-		return Tr_Ex(T_Temp(nil));
-}
+// static Temp_temp nil = NULL;
+// Tr_exp Tr_nilExp() {
+// 	if (!nil) {
+// 		nil = Temp_newtemp();
+// 		T_exp alloc = F_externalCall(String("malloc"), 
+// 									 T_ExpList(T_Const(0*F_wordSize), NULL));
+// 		return Tr_Ex(T_Eseq(T_Move(T_Temp(nil), alloc), T_Temp(nil)));
+// 	} else
+// 		return Tr_Ex(T_Temp(nil));
+// }
 
 Tr_exp Tr_intExp(int val) {
 	return Tr_Ex(T_Const(val));
@@ -144,14 +173,17 @@ Tr_exp Tr_intExp(int val) {
 Tr_exp Tr_stringExp(string str) {
 	Temp_label lb = Temp_newlabel();
 	F_frag frag = F_StringFrag(lb, str);
-	fragList = F_FragList(frag, fragList);
+	Tr_addFrag(frag);
 	return Tr_Ex(T_Name(lb));
 }
 
-Tr_exp Tr_callExp(Temp_label fun, Tr_expList el, Tr_level lev, Tr_level call) {
+
+Tr_exp Tr_callExp(Temp_label fun, Tr_expList el, Tr_level caller, Tr_level callee) {
 	assert(fun);
-	T_expList args = Tr_transExpList(el);	
-	args = T_ExpList(trackLink(call, lev->parent), args);
+	T_expList args = Tr_transExpList(el);
+
+	// static link
+	args = T_ExpList(trackLink(callee, caller->parent), args);
 	return Tr_Ex(T_Call(T_Name(fun), args));	
 }
 
@@ -212,18 +244,12 @@ Tr_exp Tr_eqRefExp(A_oper oper, Tr_exp left, Tr_exp right) {
 Tr_exp Tr_recordExp(int n, Tr_expList l) {
 	assert(n && l);
 	Temp_temp r = Temp_newtemp();
-	T_stm alloc = T_Move(T_Temp(r), 
-						 F_externalCall(String("malloc"), 
-										T_ExpList(T_Const(n*F_wordSize), NULL)));
+	T_stm alloc = T_Move(T_Temp(r), F_externalCall(String("malloc"), T_ExpList(T_Const(n*F_wordSize), NULL)));
 	int i = n - 1;
-	T_stm seq = T_Move(T_Mem(T_Binop(T_plus, 
-									  T_Temp(r), 
-									   T_Const(i-- * F_wordSize))),  unEx(l->head));
+	T_stm seq = T_Move(T_Mem(T_Binop(T_plus, T_Temp(r), T_Const(i-- * F_wordSize))),  unEx(l->head));
 
 	for (l = l->tail; l; l = l->tail, i--) {
-		seq = T_Seq(T_Move(T_Mem(T_Binop(T_plus, 
-											    T_Temp(r), 
-										         T_Const(i*F_wordSize))),  unEx(l->head)), seq); 
+		seq = T_Seq(T_Move(T_Mem(T_Binop(T_plus, T_Temp(r), T_Const(i*F_wordSize))),  unEx(l->head)), seq); 
 	}
 	return Tr_Ex(T_Eseq(T_Seq(alloc, seq), T_Temp(r)));
 }
@@ -299,7 +325,8 @@ Tr_exp Tr_ifExp(Tr_exp test, Tr_exp then, Tr_exp elsee) {
 }
 
 Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done) {
-	assert(test && body);
+	assert(test);
+	assert(body);
 	struct Cx cond = unCx(test);
 	Temp_label lbTest = Temp_newlabel();
 	Temp_label lbBody = Temp_newlabel();
@@ -314,6 +341,7 @@ Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done) {
 						   T_Label(lbDone)))))));
 }
 
+// 
 Tr_exp Tr_forExp(Tr_level lev, Tr_access iac, Tr_exp lo, Tr_exp hi, Tr_exp body, Tr_exp done) {
 	T_stm istm = unNx(Tr_assignExp(Tr_simpleVar(iac, lev), lo));
 	Tr_access limac = Tr_allocLocal(lev, FALSE);
@@ -356,6 +384,7 @@ Tr_exp Tr_doneExp() {
 	return Tr_Ex(T_Name(Temp_newlabel()));
 }
 
+// jump to last exp
 Tr_exp Tr_breakExp(Tr_exp done) {
 	assert(done);
 	Temp_label lbDone = unEx(done)->u.NAME;
@@ -409,6 +438,7 @@ static Tr_exp Tr_Nx(T_stm nx) {
 	e->u.nx = nx;
 	return e;
 }
+
 static Tr_exp Tr_Cx(patchList trues, patchList falses, T_stm stm) {
 	Tr_exp e = checked_malloc(sizeof(*e));
 	e->kind = Tr_cx;
@@ -498,18 +528,19 @@ static Tr_accessList makeFormalList(Tr_level l) {
 		}
 	}
 	return head;
-}	
+}
 
-static T_exp trackLink(Tr_level l, Tr_level g) {
+static T_exp trackLink(Tr_level callee, Tr_level target) {
 	T_exp e = T_Temp(F_FP());
-	if (l == g) {
+	if (callee == target) {
 		return e;
 	}
-	while (l != g) {
-		assert(l);
-		F_access ac = F_formals(l->frame)->head;
+	while (callee != target) {
+		assert(callee);
+		// head->static link
+		F_access ac = F_formals(callee->frame)->head;
 		e = F_Exp(ac, e);
-		l = l->parent;
+		callee = callee->parent;
 	}
 	return e;
 }

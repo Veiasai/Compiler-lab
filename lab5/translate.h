@@ -17,8 +17,12 @@ typedef struct Tr_accessList_ *Tr_accessList;
 typedef struct Tr_level_ *Tr_level;
 
 typedef struct Tr_expList_ *Tr_expList;
+struct Tr_expList_ {Tr_exp head;  Tr_expList tail;};
 
-Tr_accessList Tr_AccessList(Tr_access head, Tr_accessList tail);
+struct Tr_accessList_ {Tr_access head; Tr_accessList tail;};
+
+/* frame */
+Tr_expList Tr_ExpList(Tr_exp head, Tr_expList tail);
 
 Tr_level Tr_outermost(void);
 
