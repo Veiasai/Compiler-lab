@@ -139,16 +139,19 @@ Tr_exp Tr_null() {
 	return Tr_Ex(T_Const(0));
 }
 
+// trackLink find the right level
 Tr_exp Tr_simpleVar(Tr_access acc, Tr_level lev) {
 	assert(acc && lev);
 	return Tr_Ex(F_Exp(acc->access, trackLink(lev, acc->level)));
 }
 
+// compare field to name by semant, then found the off
 Tr_exp Tr_fieldVar(Tr_exp base, int off) {
 	assert(base);
 	return Tr_Ex(T_Mem(T_Binop(T_plus, unEx(base), T_Const(off * F_wordSize))));
 }
 
+// index's type is Tr_exp, because it can be a expression
 Tr_exp Tr_subscriptVar(Tr_exp base, Tr_exp index) {
 	assert(base && index);
 	return Tr_Ex(T_Mem(T_Binop(T_plus, unEx(base), T_Binop(
@@ -170,6 +173,7 @@ Tr_exp Tr_intExp(int val) {
 	return Tr_Ex(T_Const(val));
 }
 
+// u.name => temp_label
 Tr_exp Tr_stringExp(string str) {
 	Temp_label lb = Temp_newlabel();
 	F_frag frag = F_StringFrag(lb, str);
@@ -187,6 +191,7 @@ Tr_exp Tr_callExp(Temp_label fun, Tr_expList el, Tr_level caller, Tr_level calle
 	return Tr_Ex(T_Call(T_Name(fun), args));	
 }
 
+
 Tr_exp Tr_arithExp(A_oper oper, Tr_exp left, Tr_exp right) {
 	assert(left && right);
 	T_binOp op;
@@ -200,6 +205,8 @@ Tr_exp Tr_arithExp(A_oper oper, Tr_exp left, Tr_exp right) {
 	return Tr_Ex(T_Binop(op, unEx(left), unEx(right)));	
 }
 
+
+// condition
 Tr_exp Tr_relExp(A_oper oper, Tr_exp left, Tr_exp right) {
 	assert(left && right);
 	T_relOp op;
@@ -213,32 +220,21 @@ Tr_exp Tr_relExp(A_oper oper, Tr_exp left, Tr_exp right) {
 		default:	assert(0);
 	}
 	T_stm stm = T_Cjump(op, unEx(left), unEx(right), NULL, NULL);
+
+	// & get the address, Cx fill.
 	patchList trues = PatchList(&stm->u.CJUMP.true, NULL);
 	patchList falses = PatchList(&stm->u.CJUMP.false, NULL);
 	return Tr_Cx(trues, falses, stm);
 }
 
 Tr_exp Tr_eqStrExp(A_oper oper, Tr_exp left, Tr_exp right) {
+	// function name: stringEqual ?
 	T_exp ans = F_externalCall(String("stringEqual"), 
 								T_ExpList(unEx(left), T_ExpList(unEx(right), NULL)));
 	if (oper == A_eqOp)
 		return Tr_Ex(ans);
 	else
 		return Tr_Ex(T_Binop(T_minus, T_Const(1), ans));	
-}
-
-Tr_exp Tr_eqRefExp(A_oper oper, Tr_exp left, Tr_exp right) {
-	T_relOp op;
-	if (oper == A_eqOp)
-		op = T_eq;
-	else if (oper == A_neqOp)
-		op = T_ne;
-	else
-		assert(0);
-	T_stm stm = T_Cjump(op, unEx(left), unEx(right), NULL, NULL);
-	patchList trues = PatchList(&stm->u.CJUMP.true, NULL);
-	patchList falses = PatchList(&stm->u.CJUMP.false, NULL);
-	return Tr_Cx(trues, falses, stm);
 }
 
 Tr_exp Tr_recordExp(int n, Tr_expList l) {
@@ -261,7 +257,7 @@ Tr_exp Tr_arrayExp(Tr_exp size, Tr_exp init) {
 								 T_ExpList(unEx(init), NULL))));
 }
 
-//Tr_expList 
+// ESEQ
 Tr_exp Tr_seqExp(Tr_expList l) {
 	assert(l);	
 	T_exp seq = unEx(l->head);
@@ -324,6 +320,13 @@ Tr_exp Tr_ifExp(Tr_exp test, Tr_exp then, Tr_exp elsee) {
 	}
 }
 
+/* 
+* why use Tr_exp done to represent the jump label?
+* we place frame and temp under translate
+* so we shouldn't use temp in semant
+* Unfortunately, Tr_exp is confusing...
+*/
+
 Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done) {
 	assert(test);
 	assert(body);
@@ -333,6 +336,9 @@ Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done) {
 	Temp_label lbDone = unEx(done)->u.NAME;
 	doPatch(cond.trues, lbBody);
 	doPatch(cond.falses, lbDone);
+
+	// here cond.stm produce "goto next line", it's not necessary
+	// the problem is we just need if xx goto but Cx is if xx goto 1 else goto 2.
 	return Tr_Nx(T_Seq(T_Label(lbTest),
 				  T_Seq(cond.stm,
 				   T_Seq(T_Label(lbBody),
@@ -341,41 +347,44 @@ Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done) {
 						   T_Label(lbDone)))))));
 }
 
-// 
+// done is the same as while
+// if i and limit are locals ??? it seems right...
 Tr_exp Tr_forExp(Tr_level lev, Tr_access iac, Tr_exp lo, Tr_exp hi, Tr_exp body, Tr_exp done) {
-	T_stm istm = unNx(Tr_assignExp(Tr_simpleVar(iac, lev), lo));
+	
+	// let
+	Tr_exp ex_i = Tr_simpleVar(iac, lev);
+	T_stm istm = unNx(Tr_assignExp(ex_i, lo));
 	Tr_access limac = Tr_allocLocal(lev, FALSE);
-	T_stm limstm = unNx(Tr_assignExp(Tr_simpleVar(limac, lev), hi));
+	Tr_exp ex_lim = Tr_simpleVar(limac, lev);
+	T_stm limstm = unNx(Tr_assignExp(ex_lim, hi));
 
-	T_stm ifstm = T_Cjump(T_lt, unEx(Tr_simpleVar(iac, lev)), unEx(Tr_simpleVar(limac, lev)), NULL, NULL);
-	patchList trues = PatchList(&ifstm->u.CJUMP.true, NULL);
-	patchList falses = PatchList(&ifstm->u.CJUMP.false, NULL);
-	struct Cx ifcond = unCx(Tr_Cx(trues, falses, ifstm));
+	// if
 
-	T_stm dobody = T_Seq(unNx(body), 
-						  T_Move(unEx(Tr_simpleVar(iac, lev)), 
-								 T_Binop(T_plus, unEx(Tr_simpleVar(iac, lev)), T_Const(1))));
-
-	T_stm whstm = T_Cjump(T_lt, unEx(Tr_simpleVar(iac, lev)), unEx(Tr_simpleVar(limac, lev)), NULL, NULL);
-	trues = PatchList(&whstm->u.CJUMP.true, NULL);
-	falses = PatchList(&whstm->u.CJUMP.false, NULL);
+	// in while l <= limit
+	T_stm whstm = T_Cjump(T_lt, unEx(ex_i), unEx(ex_lim), NULL, NULL);
+	patchList trues = PatchList(&whstm->u.CJUMP.true, NULL);
+	patchList falses = PatchList(&whstm->u.CJUMP.false, NULL);
 	struct Cx whcond = unCx(Tr_Cx(trues, falses, whstm));
 
+	Temp_label lbTest = Temp_newlabel();
 	Temp_label lbBody = Temp_newlabel();
 	Temp_label lbDone = unEx(done)->u.NAME;
 
-
-	doPatch(ifcond.trues, lbBody);
-	doPatch(ifcond.falses, lbDone);
 	doPatch(whcond.trues, lbBody);
 	doPatch(whcond.falses, lbDone);
 
+	// do body
+	T_stm dobody = T_Seq(unNx(body), 
+						  T_Move(unEx(ex_i), 
+								 T_Binop(T_plus, unEx(ex_lim), T_Const(1))));
 
-	T_stm circle = T_Seq(ifcond.stm,
-					T_Seq(T_Label(lbBody),
-					 T_Seq(dobody,
-					  T_Seq(whcond.stm,
-					   T_Label(lbDone)))));
+	// as "while", goto lbBody is redundant
+	T_stm circle = T_Seq(T_Label(lbTest),
+					 T_Seq(whcond.stm,
+					   T_Seq(T_Label(lbBody),
+						T_Seq(dobody,
+					  	  T_Seq(T_Jump(T_Name(lbTest), Temp_LabelList(lbTest, NULL)),
+						    T_Label(lbDone))))));
 
 	return Tr_Nx(T_Seq(T_Seq(istm, limstm), circle));
 }
@@ -384,7 +393,7 @@ Tr_exp Tr_doneExp() {
 	return Tr_Ex(T_Name(Temp_newlabel()));
 }
 
-// jump to last exp
+// jump to last done
 Tr_exp Tr_breakExp(Tr_exp done) {
 	assert(done);
 	Temp_label lbDone = unEx(done)->u.NAME;

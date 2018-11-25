@@ -22,4 +22,10 @@
 - else又改为了NULL，我只能说沙雕测试用例，以前是需要判定为NIL，但是现在的情况是，真的有if then 和 if then else nil。
 - 如果没有else的时候返回nil，上面两种情况就混淆了，mdzz。
 - 更改了loop var的判定方式。
-- 这个lab基本上是靠别人的代码写的，流下了弱者的眼泪。
+- 这个lab基本上是靠review别人的代码写的，流下了弱者的眼泪。
+
+## 参考资料
+
+[TerCZ/Compiler-labs-2017](https://github.com/TerCZ/Compiler-labs-2017)
+
+[lncoder/tiger](https://github.com/lhcoder/tiger)

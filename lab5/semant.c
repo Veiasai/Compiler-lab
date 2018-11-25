@@ -117,7 +117,7 @@ struct expty transVar(Tr_level tlevel, Tr_exp texp, S_table venv, S_table tenv, 
 				if (exp.ty->kind != Ty_int)
 					EM_error(v->pos, "Subscript was not an integer");
 				else
-					return expTy(Tr_subscriptVar(var.exp, Tr_null()), actual_ty(get_ty_array(var.ty)));
+					return expTy(Tr_subscriptVar(var.exp, exp.exp), actual_ty(get_ty_array(var.ty)));
 			}
 			return expTy(Tr_null(), actual_ty(get_ty_array(var.ty)));
 		}
@@ -194,23 +194,19 @@ struct expty transExp(Tr_level tlevel, Tr_exp texp, S_table venv, S_table tenv, 
 				case A_eqOp:
 				case A_neqOp: {
 					Tr_exp exp = Tr_null();
-					if (left.ty->kind == Ty_void) 
+					if (left.ty->kind == Ty_void || right.ty->kind == Ty_void) 
 						EM_error(get_opexp_leftpos(a), "expression had no value");	
-					else if (right.ty->kind == Ty_void) 
-						EM_error(get_opexp_rightpos(a), "expression had no value");	
 					else if (!cmp_ty(left.ty, right.ty))
 						EM_error(get_opexp_rightpos(a), "same type required");
-					else if (left.ty->kind == Ty_int)
-						exp = Tr_relExp(get_opexp_oper(a), left.exp, right.exp);
+					// else if (left.ty->kind == Ty_int)
 					else if (left.ty->kind == Ty_string)
 						exp = Tr_eqStrExp(get_opexp_oper(a), left.exp, right.exp);
-					else if (left.ty->kind == Ty_array)
-						exp = Tr_eqRefExp(get_opexp_oper(a), left.exp, right.exp);
-					else if (left.ty->kind == Ty_record)
-						exp = Tr_eqRefExp(get_opexp_oper(a), left.exp, right.exp);
+					// else if (left.ty->kind == Ty_array)
+					// 	exp = Tr_eqRefExp(get_opexp_oper(a), left.exp, right.exp);
+					// else if (left.ty->kind == Ty_record)
+					// 	exp = Tr_eqRefExp(get_opexp_oper(a), left.exp, right.exp);
 					else
-						EM_error(get_opexp_leftpos(a), "unexpected type in comparsion");
-					
+						exp = Tr_relExp(get_opexp_oper(a), left.exp, right.exp);
 					return expTy(exp, Ty_Int());
 				}
 				case A_ltOp:
@@ -219,12 +215,12 @@ struct expty transExp(Tr_level tlevel, Tr_exp texp, S_table venv, S_table tenv, 
 				case A_geOp: {
 					if (left.ty->kind != Ty_int && left.ty->kind != Ty_string) 
 						EM_error(get_opexp_leftpos(a), "string or integer required");
-					else if (right.ty->kind != left.ty->kind) 
+					else if (!cmp_ty(left.ty, right.ty))
 						EM_error(get_opexp_rightpos(a), "same type required");
 					else
 						return expTy(Tr_relExp(get_opexp_oper(a), left.exp, right.exp), Ty_Int());
-					return expTy(Tr_null(), Ty_Int());
 				}
+				return expTy(Tr_null(), Ty_Int());
 			} 
 		} 
 		case A_recordExp: {
@@ -242,12 +238,15 @@ struct expty transExp(Tr_level tlevel, Tr_exp texp, S_table venv, S_table tenv, 
 			// count 
 			Tr_expList el = NULL;
 			int num = 0;
+
+			// List, head means current..., tail is next...
 			for (; ti && ei; ti = ti->tail, ei = ei->tail) {
 				if (ti->head->name != ei->head->name) {
 					EM_error(a->pos, "need member '%s' but '%s'", S_name(ti->head->name), S_name(ei->head->name));
 					continue;
 				}
 				struct expty exp = transExp(tlevel, texp, venv, tenv, ei->head->exp);
+				// head, tail => return {head, tail}
 				el = Tr_ExpList(exp.exp, el);
 				num++;
 				if (!cmp_ty(ti->head->ty, exp.ty))
@@ -340,9 +339,10 @@ struct expty transExp(Tr_level tlevel, Tr_exp texp, S_table venv, S_table tenv, 
 			struct expty h = transExp(tlevel, texp, venv, tenv, get_forexp_hi(a));
 			if (l.ty->kind != Ty_int || h.ty->kind != Ty_int)
 				EM_error(a->pos, "for exp's range type is not integer");
-			S_beginScope(venv);
 			
 			loop++;
+			S_beginScope(venv);
+
 			// i variable
 			Tr_access iac = Tr_allocLocal(tlevel, a->u.forr.escape);
 			E_enventry e = E_ROVarEntry(iac, Ty_Int());
@@ -350,6 +350,7 @@ struct expty transExp(Tr_level tlevel, Tr_exp texp, S_table venv, S_table tenv, 
 			S_enter(venv, get_forexp_var(a), e);
 			Tr_exp done = Tr_doneExp();
 			struct expty b = transExp(tlevel, done, venv, tenv, get_forexp_body(a));
+			
 			S_endScope(venv);
 			loop--;
 			

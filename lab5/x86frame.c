@@ -29,9 +29,8 @@ struct F_frame_ {
 static F_access InFrame(int offset);
 static F_access InReg(Temp_temp reg);
 
-const int F_wordSize = 8;		//x86: 64bit
+const int F_wordSize = 8;		//x86-64: 64bit
 static const int F_keep = 6;	//number of parameters kept in regs;
-
 
 /* function implementation */
 F_accessList F_AccessList(F_access head, F_accessList tail) {
@@ -41,7 +40,6 @@ F_accessList F_AccessList(F_access head, F_accessList tail) {
 	return l;
 }
 
-// miss
 Temp_temp F_FP() {
 	static Temp_temp t = NULL;
 	if (!t)
@@ -49,7 +47,7 @@ Temp_temp F_FP() {
 	return t;
 }
 
-// miss
+// TODO
 Temp_temp F_RV() {
 	static Temp_temp t = NULL;
 	if (!t)
@@ -71,12 +69,13 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 	U_boolList ptr;
 	for (ptr = formals; ptr; ptr = ptr->tail) {
 		F_access ac = NULL;
+		// head->current, bool escape
 		if (rn < F_keep && !(ptr->head)) {
 			ac = InReg(Temp_newtemp());	
 			rn++;
 		} else {
 			fn++;
-			ac = InFrame((fn+1)*F_wordSize);	//one word for return address
+			ac = InFrame((fn)*F_wordSize);	// return register
 		}
 
 		if (head) {
@@ -92,6 +91,7 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 	return fr;
 }
 
+// encapsulation
 Temp_label F_name(F_frame f) {
 	return f->label;
 }
@@ -100,6 +100,7 @@ F_accessList F_formals(F_frame f) {
 	return f->formals;
 }
 
+// TODO: every time count++ ?
 F_access F_allocLocal(F_frame f, bool escape) {
 	f->local_count++;
 	if (escape) 
@@ -116,10 +117,12 @@ T_exp F_Exp(F_access acc, T_exp framePtr) {
 		return T_Mem(T_Binop(T_plus, T_Const(acc->u.offset), framePtr));
 }
 
+// ???
 T_exp F_externalCall(string s, T_expList args) {
 	return T_Call(T_Name(Temp_namedlabel(s)), args);
 }
 
+// constructor
 static F_access InFrame(int offset) {
 	F_access ac = checked_malloc(sizeof(*ac));
 	ac->kind = inFrame;
@@ -136,6 +139,7 @@ static F_access InReg(Temp_temp reg) {
 
 /* fragment */
 
+// S_symbol is a pointer
 F_frag F_StringFrag(Temp_label label, string str) {
 	F_frag frag = checked_malloc(sizeof(*frag));
 	frag->kind = F_stringFrag;

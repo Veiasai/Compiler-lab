@@ -63,7 +63,7 @@ T_stm T_Exp(T_exp exp)
  p->u.EXP=exp;
  return p;
 }
- 
+
 T_exp T_Binop(T_binOp op, T_exp left, T_exp right)
 {T_exp p = (T_exp) checked_malloc(sizeof *p);
  p->kind=T_BINOP;
