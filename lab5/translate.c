@@ -279,35 +279,33 @@ Tr_exp Tr_ifExp(Tr_exp test, Tr_exp then, Tr_exp elsee) {
 	doPatch(cond.trues, t);
 	doPatch(cond.falses, f);
 
-	if (!elsee) {	
+	// here assume NULL
+	if (!elsee) 
+	{	
 		//if - then
-		if (then->kind == Tr_cx) {
-			return Tr_Nx(T_Seq(cond.stm, 
-						  T_Seq(T_Label(t),
-						   T_Seq(unNx(then),
-								 T_Label(f)))));
-		} else {
-			return Tr_Nx(T_Seq(cond.stm, 
-						  T_Seq(T_Label(t),
-						   T_Seq(unNx(then),
-								 T_Label(f)))));
-		}
+		return Tr_Nx(T_Seq(cond.stm, 
+				T_Seq(T_Label(t),
+				  T_Seq(unNx(then),
+					T_Label(f)))));
 	} else {
 		//if - then - else
 		Temp_label join = Temp_newlabel();
 		T_stm joinJump = T_Jump(T_Name(join), Temp_LabelList(join, NULL));
-		
+	
+		// no result
 		if (then->kind == Tr_nx || elsee->kind == Tr_nx) { 
-			return Tr_Nx(T_Seq(cond.stm, 
+			return Tr_Nx(T_Seq(cond.stm,
 						  T_Seq(T_Label(t),
 						   T_Seq(unNx(then),
 						    T_Seq(joinJump,
 							 T_Seq(T_Label(f),
-							  T_Seq(unNx(then),
+							  T_Seq(unNx(elsee),
 									T_Label(join))))))));
 		} else {
-			Temp_temp r = Temp_newtemp();
 			//todo:  special treatment for cx
+			// if (then->kind == Tr_cx)
+			Temp_temp r = Temp_newtemp();
+			//Eseq(a,b), b is evaluated as result
 			return Tr_Ex(T_Eseq(cond.stm, 
 						  T_Eseq(T_Label(t),
 						   T_Eseq(T_Move(T_Temp(r), unEx(then)),
@@ -316,6 +314,7 @@ Tr_exp Tr_ifExp(Tr_exp test, Tr_exp then, Tr_exp elsee) {
 							  T_Eseq(T_Move(T_Temp(r), unEx(elsee)),
 							   T_Eseq(T_Label(join), 
 									  T_Temp(r)))))))));
+									
 		}
 	}
 }
@@ -357,8 +356,6 @@ Tr_exp Tr_forExp(Tr_level lev, Tr_access iac, Tr_exp lo, Tr_exp hi, Tr_exp body,
 	Tr_access limac = Tr_allocLocal(lev, FALSE);
 	Tr_exp ex_lim = Tr_simpleVar(limac, lev);
 	T_stm limstm = unNx(Tr_assignExp(ex_lim, hi));
-
-	// if
 
 	// in while l <= limit
 	T_stm whstm = T_Cjump(T_lt, unEx(ex_i), unEx(ex_lim), NULL, NULL);
@@ -457,6 +454,7 @@ static Tr_exp Tr_Cx(patchList trues, patchList falses, T_stm stm) {
 	return e;
 }
 
+// expression
 static T_exp unEx(Tr_exp e) {
 	assert(e);
 	switch (e->kind) {
@@ -481,6 +479,7 @@ static T_exp unEx(Tr_exp e) {
 	assert(0);
 }
 
+// no result
 static T_stm unNx(Tr_exp e) {
 	assert(e);
 	switch (e->kind) { 
@@ -489,17 +488,10 @@ static T_stm unNx(Tr_exp e) {
 		case Tr_nx:
 			return e->u.nx;
 		case Tr_cx: {
-			Temp_temp r = Temp_newtemp();
-			Temp_label t = Temp_newlabel();
-			Temp_label f = Temp_newlabel();
-			doPatch(e->u.cx.trues, t);
-			doPatch(e->u.cx.falses, f);
-			return T_Exp(T_Eseq(T_Move(T_Temp(r), T_Const(1)),
-						  T_Eseq(e->u.cx.stm,
-						   T_Eseq(T_Label(f),
-							T_Eseq(T_Move(T_Temp(r), T_Const(0)),
-							 T_Eseq(T_Label(t),
-							  T_Temp(r)))))));
+			Temp_label label = Temp_newlabel();
+            doPatch(e->u.cx.trues, label);
+            doPatch(e->u.cx.falses, label);
+            return T_Seq(e->u.cx.stm, T_Label(label));
 		}
 	}
 	assert(0);
