@@ -459,8 +459,7 @@ Tr_exp transDec(Tr_level tlevel, Tr_exp texp, S_table venv, S_table tenv, A_dec 
 						t->u.name.ty = Ty_Int();
 						break;
 					}
-					t = t->u.name.ty;	
-					t = t->u.name.ty;	
+					t = t->u.name.ty;
 				}
 			}
 			return Tr_null();
