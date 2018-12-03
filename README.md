@@ -24,6 +24,12 @@
 - 更改了loop var的判定方式。
 - 这个lab基本上是靠review别人的代码写的，流下了弱者的眼泪。
 
+## lab6
+
+- init
+  - color.c与color.h的声明不匹配。
+  - main.c中Tempmap没有声明。
+
 ## 参考资料
 
 [TerCZ/Compiler-labs-2017](https://github.com/TerCZ/Compiler-labs-2017)

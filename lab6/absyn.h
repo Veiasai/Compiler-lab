@@ -6,7 +6,8 @@
  * All types and functions declared in this header file begin with "A_"
  * Linked list types end with "..list"
  */
-
+#include "util.h"
+#include "symbol.h"
 /* Type Definitions */
 
 typedef int A_pos;
@@ -99,10 +100,18 @@ struct A_efield_ {S_symbol name; A_exp exp;};
 struct A_efieldList_ {A_efield head; A_efieldList tail;};
 
 
+/* Lab3: please read the following constructions carefully
+ * and use them to finish the actions for your grammar
+ */
+
 /* Function Prototypes */
+
+//Var (lvalue)
 A_var A_SimpleVar(A_pos pos, S_symbol sym);
 A_var A_FieldVar(A_pos pos, A_var var, S_symbol sym);
 A_var A_SubscriptVar(A_pos pos, A_var var, A_exp exp);
+
+//Exp (Expressions)
 A_exp A_VarExp(A_pos pos, A_var var);
 A_exp A_NilExp(A_pos pos);
 A_exp A_IntExp(A_pos pos, int i);
@@ -118,6 +127,8 @@ A_exp A_ForExp(A_pos pos, S_symbol var, A_exp lo, A_exp hi, A_exp body);
 A_exp A_BreakExp(A_pos pos);
 A_exp A_LetExp(A_pos pos, A_decList decs, A_exp body);
 A_exp A_ArrayExp(A_pos pos, S_symbol typ, A_exp size, A_exp init);
+
+//Dec (Declarations)
 A_dec A_FunctionDec(A_pos pos, A_fundecList function);
 A_dec A_VarDec(A_pos pos, S_symbol var, S_symbol typ, A_exp init);
 A_dec A_TypeDec(A_pos pos, A_nametyList type);
@@ -133,6 +144,8 @@ A_fundecList A_FundecList(A_fundec head, A_fundecList tail);
 A_decList A_DecList(A_dec head, A_decList tail);
 A_namety A_Namety(S_symbol name, A_ty ty);
 A_nametyList A_NametyList(A_namety head, A_nametyList tail);
+
+//Recorditem (The fields for a record)
 A_efield A_Efield(S_symbol name, A_exp exp);
 A_efieldList A_EfieldList(A_efield head, A_efieldList tail);
 #endif
