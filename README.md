@@ -30,6 +30,9 @@
   - color.c与color.h的声明不匹配。
   - main.c中Tempmap没有声明。
 
+- codegen
+  - 实际上，做到ir-tree的时候，脑海中应该已经没有tiger的语法了，完全语言无关了。但是，tree的可能结构，实在太多了，有很多也是不会在tiger语言种出现的，最后就偷懒不做了。
+
 ## 参考资料
 
 [TerCZ/Compiler-labs-2017](https://github.com/TerCZ/Compiler-labs-2017)

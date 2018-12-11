@@ -6,6 +6,8 @@
 #include "escape.h"
 #include "table.h"
 
+typedef struct escapeEntry_ * escapeEntry;
+
 struct escapeEntry_ {
 	int depth;
 	bool *escape;
@@ -22,6 +24,13 @@ void Esc_findEscape(A_exp exp) {
 	S_table env = S_empty();
 	traverseExp(env, 0, exp);
 	//your code here	
+}
+
+static escapeEntry EscapeEntry(int depth, bool *escape){
+	escapeEntry ee = checked_malloc(sizeof(*ee));
+	ee->depth = depth;
+	ee->escape = escape;
+	return ee;
 }
 
 static void traverseExp(S_table env, int depth, A_exp e){

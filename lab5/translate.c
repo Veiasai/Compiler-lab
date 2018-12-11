@@ -320,7 +320,7 @@ Tr_exp Tr_ifExp(Tr_exp test, Tr_exp then, Tr_exp elsee) {
 }
 
 /* 
-* why use Tr_exp done to represent the jump label?
+* why use 'Tr_exp done' to represent the jump label?
 * we place frame and temp under translate
 * so we shouldn't use temp in semant
 * Unfortunately, Tr_exp is confusing...

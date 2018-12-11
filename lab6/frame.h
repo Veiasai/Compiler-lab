@@ -17,11 +17,7 @@ struct F_accessList_ {F_access head; F_accessList tail;};
 /* temp */
 F_accessList F_AccessList(F_access head, F_accessList tail);
 
-
 extern const int F_wordSize;
-
-Temp_temp F_FP(void);
-Temp_temp F_RV(void);
 
 F_frame F_newFrame(Temp_label name, U_boolList formals);
 
@@ -55,5 +51,24 @@ struct F_fragList_
 F_fragList F_FragList(F_frag head, F_fragList tail);
 
 T_stm F_procEntryExit1(F_frame frame, T_stm stm); // TODO
+
+Temp_temp F_FP(void);
+
+Temp_temp F_RAX(void);
+Temp_temp F_RBX(void);
+Temp_temp F_RCX(void);
+Temp_temp F_RDX(void);
+Temp_temp F_RSI(void);
+Temp_temp F_RDI(void);
+Temp_temp F_RBP(void);
+Temp_temp F_RSP(void);
+Temp_temp F_R8(void);
+Temp_temp F_R9(void);
+Temp_temp F_R10(void);
+Temp_temp F_R11(void);
+Temp_temp F_R12(void);
+Temp_temp F_R13(void);
+Temp_temp F_R14(void);
+Temp_temp F_R15(void);
 
 #endif

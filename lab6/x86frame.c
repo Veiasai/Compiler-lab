@@ -40,21 +40,6 @@ F_accessList F_AccessList(F_access head, F_accessList tail) {
 	return l;
 }
 
-Temp_temp F_FP() {
-	static Temp_temp t = NULL;
-	if (!t)
-		t = Temp_newtemp();
-	return t;
-}
-
-// TODO
-Temp_temp F_RV() {
-	static Temp_temp t = NULL;
-	if (!t)
-		t = Temp_newtemp();
-	return t;
-}
-
 F_frame F_newFrame(Temp_label name, U_boolList formals) {
 	F_frame fr = checked_malloc(sizeof(*fr));
 	fr->label = name;		
@@ -163,3 +148,23 @@ F_fragList F_FragList(F_frag head, F_fragList tail) {
 	return fl;
 }                                             
 
+#define regdec  {static Temp_temp t = NULL;if (!t)t = Temp_newtemp();return t;}
+
+Temp_temp F_FP() regdec
+
+Temp_temp F_RAX(void) regdec
+Temp_temp F_RBX(void) regdec
+Temp_temp F_RCX(void) regdec
+Temp_temp F_RDX(void) regdec
+Temp_temp F_RSI(void) regdec
+Temp_temp F_RDI(void) regdec
+Temp_temp F_RBP(void) regdec
+Temp_temp F_RSP(void) regdec
+Temp_temp F_R8(void) regdec
+Temp_temp F_R9(void) regdec
+Temp_temp F_R10(void) regdec
+Temp_temp F_R11(void) regdec
+Temp_temp F_R12(void) regdec
+Temp_temp F_R13(void) regdec
+Temp_temp F_R14(void) regdec
+Temp_temp F_R15(void) regdec
