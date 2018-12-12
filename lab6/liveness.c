@@ -17,7 +17,8 @@ static Temp_tempList unionTempList(Temp_tempList a, Temp_tempList b);
 static Temp_tempList subTempList(Temp_tempList a, Temp_tempList b);
 static bool isEqual(Temp_tempList a, Temp_tempList b);
 static bool inTempList(Temp_tempList a, Temp_temp t);
-static bool inMoveList(Live_moveList a, G_node src, G_node dst);
+
+// static bool inMoveList(Live_moveList a, G_node src, G_node dst);
 
 static G_table inTab, outTab;
 
@@ -55,71 +56,45 @@ struct Live_graph Live_liveness(G_graph flow) {
 	for (G_nodeList nodes = G_nodes(flow); nodes; nodes = nodes->tail) {
 		G_node n = nodes->head;
 
-		if (!FG_isMove(n)) {
-			Temp_tempList outhead = *(Temp_tempList *)G_look(outTab, n);
-			for (Temp_tempList def = FG_def(n); def; def = def->tail) {
-				G_node a = TAB_look(temp_to_node, def->head);
-				if (a == NULL){
-					a = G_Node(lg.graph, def->head);
-					TAB_enter(temp_to_node, def->head, a);
+		Temp_tempList outhead = *(Temp_tempList *)G_look(outTab, n);
+		for (Temp_tempList def = FG_def(n); def; def = def->tail) {
+			G_node a = TAB_look(temp_to_node, def->head);
+			if (a == NULL){
+				a = G_Node(lg.graph, def->head);
+				TAB_enter(temp_to_node, def->head, a);
+			}
+
+			for (Temp_tempList out = outhead; out; out = out->tail) {
+				if (out->head == def->head) 
+					continue;
+				
+				G_node b = TAB_look(temp_to_node, out->head);
+				if (b == NULL){
+					b = G_Node(lg.graph, def->head);
+					TAB_enter(temp_to_node, def->head, b);
 				}
 
-				for (Temp_tempList out = outhead; out; out = out->tail) {
-					if (out->head == def->head)
-						continue;
-					
-					G_node b = TAB_look(temp_to_node, out->head);
-					if (b == NULL){
-						b = G_Node(lg.graph, def->head);
-						TAB_enter(temp_to_node, def->head, b);
-					}
-
-					if (!G_inNodeList(a, G_adj(b))) {
-						G_addEdge(a, b);
-						G_addEdge(b, a);
-					}
+				if (!G_inNodeList(a, G_adj(b)) && (FG_isMove(n) || !inTempList(FG_use(n), out->head))) {
+					G_addEdge(a, b);
+					G_addEdge(b, a);
 				}
 			}
-		} else {
-			Temp_tempList use = FG_use(n);
-			Temp_tempList outhead = *(Temp_tempList *)G_look(outTab, n);
 
-			for (Temp_tempList def = FG_def(n); def; def = def->tail) {
-				G_node a = TAB_look(temp_to_node, def->head);
-				if (a == NULL){
-					a = G_Node(lg.graph, def->head);
-					TAB_enter(temp_to_node, def->head, a);
+			if (!FG_isMove(n))
+				continue;
+				
+			for (Temp_tempList out = FG_use(n); out; out = out->tail) {
+				if (out->head == def->head)
+					continue;
+				
+				G_node b = TAB_look(temp_to_node, out->head);
+				if (b == NULL){
+					b = G_Node(lg.graph, def->head);
+					TAB_enter(temp_to_node, def->head, b);
 				}
 
-				for (Temp_tempList out = outhead; out; out = out->tail) {
-					if (out->head == def->head) 
-						continue;
-					
-					G_node b = TAB_look(temp_to_node, out->head);
-					if (b == NULL){
-						b = G_Node(lg.graph, def->head);
-						TAB_enter(temp_to_node, def->head, b);
-					}
-
-					if (!G_inNodeList(a, G_adj(b)) && !inTempList(use, out->head)) {
-						G_addEdge(a, b);
-						G_addEdge(b, a);
-					}
-				}
-
-				for (Temp_tempList out = use; out; out = out->tail) {
-					if (out->head == def->head)
-						continue;
-					
-					G_node b = TAB_look(temp_to_node, out->head);
-					if (b == NULL){
-						b = G_Node(lg.graph, def->head);
-						TAB_enter(temp_to_node, def->head, b);
-					}
-
-					if (!inMoveList(lg.moves, b, a)) {
-						lg.moves = Live_MoveList(b, a, lg.moves);
-					}
+				if (!inMoveList(lg.moves, b, a)) {
+					lg.moves = Live_MoveList(b, a, lg.moves);
 				}
 			}
 		}
@@ -186,4 +161,17 @@ static bool isEqual(Temp_tempList a, Temp_tempList b) {
 			return FALSE;
 
 	return true;
+}
+
+static bool inTempList(Temp_tempList a, Temp_temp t) {
+	bool in = FALSE;
+
+	for (; a; a = a->tail) {
+		if (a->head == t) {
+			in = TRUE;
+			return in;
+		}
+	}
+
+	return in;
 }
