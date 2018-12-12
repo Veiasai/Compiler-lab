@@ -80,9 +80,10 @@ struct Live_graph Live_liveness(G_graph flow) {
 				}
 			}
 
+			// add movelist
 			if (!FG_isMove(n))
 				continue;
-				
+
 			for (Temp_tempList out = FG_use(n); out; out = out->tail) {
 				if (out->head == def->head)
 					continue;
@@ -152,26 +153,29 @@ static Temp_tempList subTempList(Temp_tempList a, Temp_tempList b) {
 static bool isEqual(Temp_tempList a, Temp_tempList b) {
 	Temp_tempList p = a;
 	for (; p; p = p->tail) 
-		if (!inTempList(b, p->head)) {
+		if (!inTempList(b, p->head))
 			return FALSE;
 
 	p = b;
-	for (; p; p = p->tail) {
-		if (!inTempList(a, p->head)) {
+	for (; p; p = p->tail) 
+		if (!inTempList(a, p->head)) 
 			return FALSE;
 
 	return true;
 }
 
 static bool inTempList(Temp_tempList a, Temp_temp t) {
-	bool in = FALSE;
+	for (; a; a = a->tail)
+		if (a->head == t) 
+			return TRUE;
+		
+	return FALSE;
+}
 
-	for (; a; a = a->tail) {
-		if (a->head == t) {
-			in = TRUE;
-			return in;
-		}
-	}
-
-	return in;
+static bool inMoveList(Live_moveList a, G_node src, G_node dst) {
+	for (; a; a = a->tail) 
+		if (a->src == src && a->dst == dst) 
+			return TRUE;
+		
+	return FALSE;
 }
