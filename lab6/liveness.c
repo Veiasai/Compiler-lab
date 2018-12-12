@@ -37,21 +37,94 @@ Temp_temp Live_gtemp(G_node n) {
 struct Live_graph Live_liveness(G_graph flow) {
 	struct Live_graph lg;
 
-	G_nodeList nodes = G_nodes(flow);
-
 	// a good idea from Jzy, G_table acts as std::map 
 	inTab = G_empty();
 	outTab = G_empty();
 	
-	for (; nodes; nodes = nodes->tail) {
+	for (G_nodeList nodes = G_nodes(flow); nodes; nodes = nodes->tail) {
 		G_enter(inTab, nodes->head, checked_malloc(sizeof(Temp_tempList)));
 		G_enter(outTab, nodes->head, checked_malloc(sizeof(Temp_tempList)));
 	}
 
-	nodes = G_nodes(flow);
-	while(dfs_live(nodes));
+	while(dfs_live(G_nodes(flow)));
 	
-	
+	// add conflict edge
+	lg.graph = G_graph();
+	TAB_table temp_to_node = TAB_empty();
+
+	for (G_nodeList nodes = G_nodes(flow); nodes; nodes = nodes->tail) {
+		G_node n = nodes->head;
+
+		if (!FG_isMove(n)) {
+			Temp_tempList outhead = *(Temp_tempList *)G_look(outTab, n);
+			for (Temp_tempList def = FG_def(n); def; def = def->tail) {
+				G_node a = TAB_look(temp_to_node, def->head);
+				if (a == NULL){
+					a = G_Node(lg.graph, def->head);
+					TAB_enter(temp_to_node, def->head, a);
+				}
+
+				for (Temp_tempList out = outhead; out; out = out->tail) {
+					if (out->head == def->head)
+						continue;
+					
+					G_node b = TAB_look(temp_to_node, out->head);
+					if (b == NULL){
+						b = G_Node(lg.graph, def->head);
+						TAB_enter(temp_to_node, def->head, b);
+					}
+
+					if (!G_inNodeList(a, G_adj(b))) {
+						G_addEdge(a, b);
+						G_addEdge(b, a);
+					}
+				}
+			}
+		} else {
+			Temp_tempList use = FG_use(n);
+			Temp_tempList outhead = *(Temp_tempList *)G_look(outTab, n);
+
+			for (Temp_tempList def = FG_def(n); def; def = def->tail) {
+				G_node a = TAB_look(temp_to_node, def->head);
+				if (a == NULL){
+					a = G_Node(lg.graph, def->head);
+					TAB_enter(temp_to_node, def->head, a);
+				}
+
+				for (Temp_tempList out = outhead; out; out = out->tail) {
+					if (out->head == def->head) 
+						continue;
+					
+					G_node b = TAB_look(temp_to_node, out->head);
+					if (b == NULL){
+						b = G_Node(lg.graph, def->head);
+						TAB_enter(temp_to_node, def->head, b);
+					}
+
+					if (!G_inNodeList(a, G_adj(b)) && !inTempList(use, out->head)) {
+						G_addEdge(a, b);
+						G_addEdge(b, a);
+					}
+				}
+
+				for (Temp_tempList out = use; out; out = out->tail) {
+					if (out->head == def->head)
+						continue;
+					
+					G_node b = TAB_look(temp_to_node, out->head);
+					if (b == NULL){
+						b = G_Node(lg.graph, def->head);
+						TAB_enter(temp_to_node, def->head, b);
+					}
+
+					if (!inMoveList(lg.moves, b, a)) {
+						lg.moves = Live_MoveList(b, a, lg.moves);
+					}
+				}
+			}
+		}
+	}
+
 	return lg;
 }
 
@@ -76,10 +149,12 @@ static bool dfs_live(G_nodeList nodes){
 
 	in = unionTempList(FG_use(n), subTempList(out, FG_def(n)));
 
+	bool cur_res = !isEqual(in_old, in) || !isEqual(out_old, out);
+
 	*(Temp_tempList*)G_look(inTab, n) = in;
 	*(Temp_tempList*)G_look(outTab, n) = out;
 
-	return res || (!isEqual(in_old, in) || !isEqual(out_old, out));
+	return res || cur_res;
 }
 
 
