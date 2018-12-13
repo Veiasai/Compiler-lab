@@ -50,7 +50,7 @@ struct Live_graph Live_liveness(G_graph flow) {
 	while(dfs_live(G_nodes(flow)));
 	
 	// add conflict edge
-	lg.graph = G_graph();
+	lg.graph = G_Graph();
 	TAB_table temp_to_node = TAB_empty();
 
 	for (G_nodeList nodes = G_nodes(flow); nodes; nodes = nodes->tail) {

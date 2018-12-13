@@ -43,7 +43,7 @@ G_graph FG_AssemFlowGraph(AS_instrList il, F_frame f) {
     G_graph g = G_Graph();
     G_node prev = NULL;
 
-    AS_InstrList cur = il;
+    AS_instrList cur = il;
     TAB_table label_table = TAB_empty();
 
     for (;cur;cur=cur->tail){

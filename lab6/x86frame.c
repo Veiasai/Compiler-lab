@@ -20,11 +20,7 @@ struct F_access_ {
 	} u;
 };
 
-struct F_frame_ {
-	F_accessList formals, locals;
-	int local_count;
-	Temp_label label;
-};
+
 
 static F_access InFrame(int offset);
 static F_access InReg(Temp_temp reg);
