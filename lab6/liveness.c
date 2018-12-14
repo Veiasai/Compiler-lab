@@ -109,9 +109,9 @@ static bool dfs_live(G_nodeList nodes){
 	if (nodes->tail && nodes->tail->head)
 		res = dfs_live(nodes->tail);
 	else
-		return false;	// no change
+		return FALSE;	// no change
 	
-	n = nodes->head;
+	G_node n = nodes->head;
 	Temp_tempList in_old = *(Temp_tempList *)G_look(inTab, n);
 	Temp_tempList out_old = *(Temp_tempList *)G_look(outTab, n);
 
@@ -161,7 +161,7 @@ static bool isEqual(Temp_tempList a, Temp_tempList b) {
 		if (!inTempList(a, p->head)) 
 			return FALSE;
 
-	return true;
+	return TRUE;
 }
 
 static bool inTempList(Temp_tempList a, Temp_temp t) {
