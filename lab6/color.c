@@ -15,6 +15,32 @@
 
 #define K 15
 
+static void Build(G_graph ig);
+static int locate_register(Temp_temp temp);
+static void MakeWorklist(G_graph ig);
+static void Simplify();
+static void DecrementDegree(G_node m);
+static void EnableMoves(G_nodeList nodes);
+static void Coalesce();
+static G_nodeList Adjacent(G_node n);
+static void AddWorkList(G_node u);
+static bool OK(G_node t, G_node r);
+static bool Briggs(G_node u, G_node v);
+static void Combine(G_node u, G_node v);
+static void Freeze();
+static void FreezeMoves(G_node u);
+static void SelectSpill();
+static void AssignColors(G_graph ig);
+static bool MoveRelated(G_node n);
+static Live_moveList NodeMoves(G_node n);
+static G_node GetAlias(G_node n);
+static bool inMoveList(Live_moveList a, G_node src, G_node dst);
+static Live_moveList subMoveList(Live_moveList a, Live_moveList b);
+static Live_moveList unionMoveList(Live_moveList a, Live_moveList b);
+static bool precolored(G_node n);
+static void AddEdge(G_node u, G_node v);
+
+
 static G_nodeList simplifyWorklist;
 static G_nodeList freezeWorklist;
 static G_nodeList spillWorklist;
@@ -213,9 +239,13 @@ static void Coalesce() {
 		AddWorkList(u);
 	} else if (precolored(v) || G_inNodeList(u, G_adj(v))) {
 		constrainedMoves = Live_MoveList(x, y, constrainedMoves);
-		// AddWorkList(u);
-		// AddWorkList(v);
-	} else if (Briggs(u, v)) {
+		AddWorkList(u);
+		AddWorkList(v);
+	} else if (precolored(u) && (OK(v,u))) {
+		coalescedMoves = Live_MoveList(x, y, coalescedMoves);
+		Combine(u, v);
+		AddWorkList(u);
+	} else if (!precolored(u) && Briggs(u, v)) {
 		coalescedMoves = Live_MoveList(x, y, coalescedMoves);
 		Combine(u, v);
 		AddWorkList(u);
@@ -233,6 +263,18 @@ static void AddWorkList(G_node u) {
 		freezeWorklist = G_subNodeList(freezeWorklist, G_NodeList(u, NULL));
 		simplifyWorklist = G_NodeList(u, simplifyWorklist);
 	}
+}
+
+// foreach t's adjacent
+static bool OK(G_node t, G_node r) {
+	for (G_nodeList p = Adjacent(t); p; p = p->tail) {
+		if(*(int *)G_look(degreeTab, p->head) < K || precolored(p->head) || G_inNodeList(p->head, G_adj(r))) {
+			continue;
+		} else {
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 static bool Briggs(G_node u, G_node v) {
@@ -408,4 +450,21 @@ static bool inMoveList(Live_moveList a, G_node src, G_node dst) {
 			return TRUE;
 		
 	return FALSE;
+}
+
+static bool precolored(G_node n) {
+	return *(int *)G_look(colorTab, n);
+}
+
+static void AddEdge(G_node u, G_node v) {
+	if (!G_inNodeList(u, G_adj(v)) && u != v) {
+		if (!precolored(u)) {
+			(*(int *)G_look(degreeTab, u))++;
+			G_addEdge(u, v);
+		}
+		if (!precolored(v)) {
+			(*(int *)G_look(degreeTab, v))++;
+			G_addEdge(v, u);
+		}
+	}
 }
