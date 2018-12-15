@@ -18,7 +18,7 @@ static Temp_tempList subTempList(Temp_tempList a, Temp_tempList b);
 static bool isEqual(Temp_tempList a, Temp_tempList b);
 static bool inTempList(Temp_tempList a, Temp_temp t);
 
-// static bool inMoveList(Live_moveList a, G_node src, G_node dst);
+static bool inMoveList(Live_moveList a, G_node src, G_node dst);
 
 static G_table inTab, outTab;
 

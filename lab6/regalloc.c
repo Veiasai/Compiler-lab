@@ -34,14 +34,14 @@ static void replaceTemp(Temp_tempList list, Temp_temp old, Temp_temp new_) {
 struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 	//your code here
 	Temp_map F_tempMap;
-reset:
-	G_graph flow_graph = FG_AssemFlowGraph(il, f);
-
-	struct Live_graph live_graph = Live_liveness(flow_graph);
-
+	while(1){
+		G_graph flow_graph = FG_AssemFlowGraph(il, f);
+		struct Live_graph live_graph = Live_liveness(flow_graph);
+		struct COL_result color = COL_color(live_graph.graph, F_tempMap, NULL, live_graph.moves);;
+		
+		if (color.spills == NULL)
+			break;
 	
-	struct COL_result color = COL_color(live_graph.graph, F_tempMap, NULL, live_graph.moves);;
-	if (color.spills != NULL){
 		for (Temp_tempList spills = color.spills; spills; spills = spills->tail) {
 			Temp_temp spill = spills->head;
 			f->local_count += 1;
@@ -73,7 +73,6 @@ reset:
 				}
 			}
 		}
-		goto reset;
 	}
 	struct RA_result ret;
 	return ret;

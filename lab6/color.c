@@ -39,6 +39,8 @@ static Live_moveList subMoveList(Live_moveList a, Live_moveList b);
 static Live_moveList unionMoveList(Live_moveList a, Live_moveList b);
 static bool precolored(G_node n);
 static void AddEdge(G_node u, G_node v);
+static G_nodeList G_subNodeList(G_nodeList u, G_nodeList v);
+static G_nodeList G_unionNodeList(G_nodeList u, G_nodeList v);
 
 
 static G_nodeList simplifyWorklist;
@@ -467,4 +469,19 @@ static void AddEdge(G_node u, G_node v) {
 			G_addEdge(v, u);
 		}
 	}
+}
+
+static G_nodeList G_subNodeList(G_nodeList u, G_nodeList v) {
+	G_nodeList res = NULL;
+	for (G_nodeList nodes = u; nodes; nodes = nodes->tail) 
+		if (!G_inNodeList(nodes->head, v)) 
+		res = G_NodeList(nodes->head, res);
+  	return res;
+}
+static G_nodeList G_unionNodeList(G_nodeList u, G_nodeList v){
+	G_nodeList res = u;
+	for (G_nodeList nodes = v; nodes; nodes = nodes->tail) 
+		if (!G_inNodeList(nodes->head, u)) 
+		res = G_NodeList(nodes->head, res);
+  	return res;
 }

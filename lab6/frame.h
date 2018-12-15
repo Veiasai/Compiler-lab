@@ -6,13 +6,6 @@
 
 #include "tree.h"
 
-typedef struct F_frame_ *F_frame;
-
-struct F_frame_ {
-	F_accessList formals, locals;
-	int local_count;
-	Temp_label label;
-};
 
 typedef struct F_access_ *F_access;
 typedef struct F_accessList_ *F_accessList;
@@ -22,6 +15,14 @@ struct F_accessList_ {F_access head; F_accessList tail;};
 
 /* temp */
 F_accessList F_AccessList(F_access head, F_accessList tail);
+
+typedef struct F_frame_ *F_frame;
+
+struct F_frame_ {
+	F_accessList formals, locals;
+	int local_count;
+	Temp_label label;
+};
 
 extern const int F_wordSize;
 
