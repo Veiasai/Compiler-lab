@@ -163,3 +163,10 @@ AS_proc AS_Proc(string p, AS_instrList b, string e)
  proc->prolog=p; proc->body=b; proc->epilog=e;
  return proc;
 }
+
+// TODO:
+void AS_rewrite(AS_instrList iList, Temp_map m){
+  for (;iList;iList=iList->tail) {
+    AS_instr inst = iList->head;
+  }
+}

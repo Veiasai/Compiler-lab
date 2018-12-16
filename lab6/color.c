@@ -155,7 +155,7 @@ static int locate_register(Temp_temp temp) {
 	else if (temp == F_R14()) return 14;
 	else if (temp == F_R15()) return 15;
 
-	else if (temp == F_RSP()) return 16;
+	else if (temp == F_RSP() || temp == F_FP()) return 16;
 
 	return 0;
 }

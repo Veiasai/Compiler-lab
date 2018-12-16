@@ -34,6 +34,8 @@ static const int F_keep = 6;	//number of parameters kept in regs;
 AS_instrList F_codegen(F_frame f, T_stmList stmList) {
     instr_list = cur = NULL;
     frame = f;
+    
+    // callee save reg
     Temp_tempList csr = callee_save;
     Temp_tempList csr_bak, csr_cur; 
     csr_bak = csr_cur = TL(Temp_newtemp(), NULL);
@@ -114,8 +116,6 @@ static void  munchStm(T_stm stm){
             emit(AS_Oper(inst, NULL, NULL, AT(TL(stm->u.CJUMP.true, NULL))));
             break;
         case T_MOVE:{
-
-        
             T_exp dst = stm->u.MOVE.dst, src = stm->u.MOVE.src;
             if (dst->kind == T_MEM){
                 if (dst->u.MEM->kind == T_BINOP){
@@ -123,22 +123,22 @@ static void  munchStm(T_stm stm){
                     if (dst->u.MEM->u.BINOP.right->kind == T_CONST){
                         T_exp e1 = dst->u.MEM->u.BINOP.left, e2 = src;
                         sprintf(inst, "movq `s0 %d(`d0)", dst->u.MEM->u.BINOP.right->u.CONST);
-                        emit(AS_Move(inst, TL(munchExp(e1), NULL), 
-                                                TL(munchExp(e2), NULL)));
+                        emit(AS_Oper(inst, TL(munchExp(e1), NULL), 
+                                                TL(munchExp(e2), NULL), NULL));
                         break;
                     }else if (dst->u.MEM->u.BINOP.left->kind == T_CONST){
                         T_exp e1 = dst->u.MEM->u.BINOP.right, e2 = src;
                         sprintf(inst, "movq `s0 %d(`d0)", dst->u.MEM->u.BINOP.left->u.CONST);
-                        emit(AS_Move(inst, TL(munchExp(e1), NULL), 
-                                                TL(munchExp(e2), NULL)));
+                        emit(AS_Oper(inst, TL(munchExp(e1), NULL), 
+                                                TL(munchExp(e2), NULL), NULL));
                         break;
                     }
                     assert(0);
                 }else if (src->kind == T_MEM){
                     assert(0);
                 }else{
-                    emit(AS_Move("movq `s0, (`d0)", TL(munchExp(dst), NULL), 
-                                                TL(munchExp(src), NULL)));
+                    emit(AS_Oper("movq `s0, (`d0)", TL(munchExp(dst), NULL), 
+                                                TL(munchExp(src), NULL), NULL));
                     break;
                 }
             }else if (dst->kind == T_TEMP){
@@ -182,7 +182,7 @@ static Temp_temp munchExp(T_exp e){
 			break;
             }
         case T_MEM:
-		    emit(AS_Oper("movl (`s0), `d0", TL(d, NULL), 
+		    emit(AS_Oper("movq (`s0), `d0", TL(d, NULL), 
                                                 TL(munchExp(e->u.MEM), NULL), 
                                                     AT(NULL)));
 		    break;
@@ -193,7 +193,7 @@ static Temp_temp munchExp(T_exp e){
             assert(0);
         case T_NAME:{
             char *inst = checked_malloc(MAXLINE * sizeof(char));
-		    sprintf(inst, "movl $%s, `d0", Temp_labelstring(e->u.NAME));
+		    sprintf(inst, "movq $%s, `d0", Temp_labelstring(e->u.NAME));
 		    emit(AS_Oper(inst, TL(d, NULL), NULL, AT(NULL)));
             break;
             }
