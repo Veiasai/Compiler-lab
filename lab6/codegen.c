@@ -34,7 +34,7 @@ static const int F_keep = 6;	//number of parameters kept in regs;
 AS_instrList F_codegen(F_frame f, T_stmList stmList) {
     instr_list = cur = NULL;
     frame = f;
-    
+
     // callee save reg
     Temp_tempList csr = callee_save;
     Temp_tempList csr_bak, csr_cur; 
@@ -124,13 +124,13 @@ static void  munchStm(T_stm stm){
                         T_exp e1 = dst->u.MEM->u.BINOP.left, e2 = src;
                         sprintf(inst, "movq `s0 %d(`d0)", dst->u.MEM->u.BINOP.right->u.CONST);
                         emit(AS_Oper(inst, TL(munchExp(e1), NULL), 
-                                                TL(munchExp(e2), NULL), NULL));
+                                                TL(munchExp(e2), NULL), AT(NULL)));
                         break;
                     }else if (dst->u.MEM->u.BINOP.left->kind == T_CONST){
                         T_exp e1 = dst->u.MEM->u.BINOP.right, e2 = src;
                         sprintf(inst, "movq `s0 %d(`d0)", dst->u.MEM->u.BINOP.left->u.CONST);
                         emit(AS_Oper(inst, TL(munchExp(e1), NULL), 
-                                                TL(munchExp(e2), NULL), NULL));
+                                                TL(munchExp(e2), NULL), AT(NULL)));
                         break;
                     }
                     assert(0);
@@ -138,7 +138,7 @@ static void  munchStm(T_stm stm){
                     assert(0);
                 }else{
                     emit(AS_Oper("movq `s0, (`d0)", TL(munchExp(dst), NULL), 
-                                                TL(munchExp(src), NULL), NULL));
+                                                TL(munchExp(src), NULL), AT(NULL)));
                     break;
                 }
             }else if (dst->kind == T_TEMP){
@@ -198,8 +198,10 @@ static Temp_temp munchExp(T_exp e){
             break;
             }
         case T_CONST:
-            // should be detected
-            assert(0);
+            char *inst = checked_malloc(MAXLINE * sizeof(char));
+		    sprintf(inst, "movq $%d, `d0", e->u.CONST);
+		    emit(AS_Oper(inst, TL(Temp_newtemp(), NULL), NULL, AT(NULL)));
+            break;
         case T_CALL:{
             Temp_label func = e->u.CALL.fun->u.NAME;
 	        char *inst = checked_malloc(MAXLINE * sizeof(char));

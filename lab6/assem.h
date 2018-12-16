@@ -5,6 +5,7 @@
 
 #ifndef ASSEM_H
 #define ASSEM_H
+#include "frame.h"
 
 typedef struct {Temp_labelList labels;} *AS_targets;
 AS_targets AS_Targets(Temp_labelList labels);
@@ -40,6 +41,7 @@ struct AS_proc_ {
 
 AS_proc AS_Proc(string p, AS_instrList b, string e);
 
+AS_proc F_procEntryExit3(F_frame frame, AS_instrList il);
 
 //TA's implementation. Just for reference.
 void AS_rewrite(AS_instrList iList, Temp_map m);

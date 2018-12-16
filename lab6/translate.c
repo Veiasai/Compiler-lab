@@ -129,8 +129,7 @@ static void Tr_addFrag(frag){
 }
 
 void Tr_procEntryExit(Tr_level level, Tr_exp body, Tr_accessList formals) {
-	// todo:
-	F_frag frag = F_ProcFrag(unNx(body), level->frame);
+	F_frag frag = F_ProcFrag(T_Move(T_Temp(F_RAX()), unEx(body)), level->frame);
 	Tr_addFrag(frag);
 	// fragList = F_FragList(frag, fragList);
 }
@@ -158,16 +157,6 @@ Tr_exp Tr_subscriptVar(Tr_exp base, Tr_exp index) {
 						T_mul, unEx(index), T_Const(F_wordSize)))));
 }
 
-// static Temp_temp nil = NULL;
-// Tr_exp Tr_nilExp() {
-// 	if (!nil) {
-// 		nil = Temp_newtemp();
-// 		T_exp alloc = F_externalCall(String("malloc"), 
-// 									 T_ExpList(T_Const(0*F_wordSize), NULL));
-// 		return Tr_Ex(T_Eseq(T_Move(T_Temp(nil), alloc), T_Temp(nil)));
-// 	} else
-// 		return Tr_Ex(T_Temp(nil));
-// }
 
 Tr_exp Tr_intExp(int val) {
 	return Tr_Ex(T_Const(val));

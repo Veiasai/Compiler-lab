@@ -44,24 +44,24 @@ static void doProc(FILE *out, F_frame frame, T_stm body)
 
  Temp_map F_tempMap = Temp_empty();
 
- //printf("doProc for function %s:\n", S_name(F_name(frame)));
- /*printStmList(stdout, T_StmList(body, NULL));
- printf("-------====IR tree=====-----\n");*/
+ printf("doProc for function %s:\n", S_name(F_name(frame)));
+ printStmList(stdout, T_StmList(body, NULL));
+ printf("-------====IR tree=====-----\n");
 
  stmList = C_linearize(body);
- /*printStmList(stdout, stmList);
- printf("-------====Linearlized=====-----\n");*/
+ printStmList(stdout, stmList);
+ printf("-------====Linearlized=====-----\n");
 
  blo = C_basicBlocks(stmList);
  C_stmListList stmLists = blo.stmLists;
- /*for (; stmLists; stmLists = stmLists->tail) {
+ for (; stmLists; stmLists = stmLists->tail) {
  	printStmList(stdout, stmLists->head);
 	printf("------====Basic block=====-------\n");
- }*/
+ }
 
  stmList = C_traceSchedule(blo);
- /*printStmList(stdout, stmList);
- printf("-------====trace=====-----\n");*/
+ printStmList(stdout, stmList);
+ printf("-------====trace=====-----\n");
  iList  = F_codegen(frame, stmList); /* 9 */
 
  AS_printInstrList(stdout, iList, Temp_layerMap(F_tempMap, Temp_name()));
