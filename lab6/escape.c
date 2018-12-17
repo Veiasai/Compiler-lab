@@ -40,7 +40,7 @@ static void traverseExp(S_table env, int depth, A_exp e){
 			return;}
 		case A_callExp:{
 			A_expList el = e->u.call.args;
-			for (el;el;el=el->tail)
+			for (;el;el=el->tail)
 				traverseExp(env, depth, el->head);
 			return;}
 		case A_opExp:{
@@ -49,12 +49,12 @@ static void traverseExp(S_table env, int depth, A_exp e){
 			return;}
 		case A_recordExp:{
 			A_efieldList efl = e->u.record.fields;
-			for (efl;efl;efl=efl->tail)
+			for (;efl;efl=efl->tail)
 				traverseExp(env, depth, efl->head->exp);
 			return;}
 		case A_seqExp:{
 			A_expList el = e->u.seq;
-			for (el;el;el->tail)
+			for (;el;el=el->tail)
 				traverseExp(env, depth, el->head);
 			return;}
 		case A_assignExp:{
@@ -64,6 +64,7 @@ static void traverseExp(S_table env, int depth, A_exp e){
 		case A_ifExp:{
 			traverseExp(env, depth, e->u.iff.test);
 			traverseExp(env, depth, e->u.iff.then);
+			if (e->u.iff.elsee) traverseExp(env, depth, e->u.iff.elsee);
 			return;}
 		case A_whileExp:{
 			traverseExp(env, depth, e->u.whilee.test);
@@ -75,14 +76,18 @@ static void traverseExp(S_table env, int depth, A_exp e){
 			S_enter(env, e->u.forr.var, EscapeEntry(depth, &(e->u.forr.escape)));
 			traverseExp(env, depth, e->u.forr.lo);
 			traverseExp(env, depth, e->u.forr.hi);
+			S_beginScope(env);
 			traverseExp(env, depth, e->u.forr.body);
+			S_endScope(env);
 			return;
 		}
 		case A_letExp:{
+			S_beginScope(env);
 			A_decList lt = e->u.let.decs;
-			for (lt;lt;lt=lt->tail)
+			for (;lt;lt=lt->tail)
 				traverseDec(env, depth, lt->head);
 			traverseExp(env, depth, e->u.let.body);
+			S_endScope(env);
 			return;
 		}
 		case A_arrayExp:{
@@ -110,11 +115,11 @@ static void traverseDec(S_table env, int depth, A_dec d){
 			return;
 		case A_functionDec: {
 			A_fundecList fl = d->u.function;
-			for (fl;fl;fl=fl->tail){
+			for (;fl;fl=fl->tail){
 				A_fundec fun = fl->head;
 				A_fieldList el = fun->params;
 				S_beginScope(env);
-				for (el;el;el=el->tail){
+				for (;el;el=el->tail){
 					el->head->escape = FALSE;
 					S_enter(env, el->head->name, EscapeEntry(depth+1, &(el->head->escape)));
 				}
@@ -131,7 +136,8 @@ static void traverseVar(S_table env, int depth, A_var v){
 	switch(v->kind){
 		case A_simpleVar: {
 			escapeEntry e = S_look(env, v->u.simple);
-			if (!e) return;
+			assert(e);
+			// if (!e) return;
 
 			// cmp depth
 			if (e->depth < depth)
