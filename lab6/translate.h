@@ -22,6 +22,8 @@ struct Tr_expList_ {Tr_exp head;  Tr_expList tail;};
 struct Tr_accessList_ {Tr_access head; Tr_accessList tail;};
 
 /* frame */
+void Tr_init();
+
 Tr_expList Tr_ExpList(Tr_exp head, Tr_expList tail);
 
 Tr_level Tr_outermost(void);

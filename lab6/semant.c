@@ -63,7 +63,7 @@ F_fragList SEM_transProg(A_exp exp) {
 	S_table venv = E_base_venv();
 	loop = 0;
 	s = set_init();
-
+	Tr_init();
 	// create main level ? refer to TerCz...why need this...
     Temp_label func_label = Temp_newlabel();
     Tr_level main_level = Tr_newLevel(Tr_outermost(), func_label, NULL);

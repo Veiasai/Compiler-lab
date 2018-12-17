@@ -36,6 +36,8 @@ extern bool anyErrors;
 /* print the assembly language instructions to filename.s */
 static void doProc(FILE *out, F_frame frame, T_stm body)
 {
+  assert(frame);
+  assert(body);
  AS_proc proc;
  struct RA_result allocation;
  T_stmList stmList;
@@ -101,17 +103,31 @@ void doStr(FILE *out, Temp_label label, string str) {
 	fprintf(out, ".section .rodata\n");
 	fprintf(out, ".%s:\n", S_name(label));
 
-	int length = *(int *)str;
-	length = length + 4;
-	//it may contains zeros in the middle of string. To keep this work, we need to print all the charactors instead of using fprintf(str)
-	fprintf(out, ".string \"");
-	int i = 0;
-	for (; i < length; i++) {
-		fprintf(out, "%c", str[i]);
-	}
-	fprintf(out, "\"\n");
+  // wtf: length ???
+	// int length = *(int *)str;
+	// length = length + 4;
+	// //it may contains zeros in the middle of string. To keep this work, we need to print all the charactors instead of using fprintf(str)
+	// fprintf(out, ".string \"");
+	// int i = 0;
+	// for (; i < length; i++) {
+	// 	fprintf(out, "%c", str[i]);
+	// }
+	// fprintf(out, "\"\n");
 
 	//fprintf(out, ".string \"%s\"\n", str);
+
+  fprintf(out, ".int %d\n", strlen(str));
+  fprintf(out, ".string \"");
+  for (; *str != 0; str++) {
+    if (*str == '\n') {
+        fprintf(out, "\\n");
+    } else if (*str == '\t') {
+        fprintf(out, "\\t");
+    } else if (isprint(*str)) {
+        fprintf(out, "%c", *str);
+    }
+  }
+  fprintf(out, "\"\n");
 }
 
 int main(int argc, string *argv)
@@ -134,22 +150,31 @@ int main(int argc, string *argv)
 
    //Lab 6: escape analysis
    //If you have implemented escape analysis, uncomment this
+   printf("-------====escape=====-----\n");
    Esc_findEscape(absyn_root); /* set varDec's escape field */
 
+   printf("-------====SEM_transProg=====-----\n");
    frags = SEM_transProg(absyn_root);
    if (anyErrors) return 1; /* don't continue */
-
    /* convert the filename */
+   printf("-------====do_Proc=====-----\n");
    sprintf(outfile, "%s.s", argv[1]);
    out = fopen(outfile, "w");
    /* Chapter 8, 9, 10, 11 & 12 */
-   for (;frags;frags=frags->tail)
+   for (;frags;frags=frags->tail){
+     fprintf( stderr, "-------====frags=====-----\n");
      if (frags->head->kind == F_procFrag) {
+       fprintf( stderr, "-------====do_frags=====-----\n");
        doProc(out, frags->head->u.proc.frame, frags->head->u.proc.body);
-	 }
-     else if (frags->head->kind == F_stringFrag) 
-	   doStr(out, frags->head->u.stringg.label, frags->head->u.stringg.str);
-
+	  }
+     else if (frags->head->kind == F_stringFrag) {
+       fprintf( stderr, "-------====do_str=====-----\n");
+       doStr(out, frags->head->u.stringg.label, frags->head->u.stringg.str);
+     }else {
+       fprintf( stderr, "-------====nothing=====-----\n");
+     }
+   }
+	   
    fclose(out);
    return 0;
  }

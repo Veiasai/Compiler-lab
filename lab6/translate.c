@@ -116,11 +116,11 @@ Tr_access Tr_allocLocal(Tr_level level, bool escape) {
 
 /******* ir tree *******/
 
-static F_fragList fragList = {NULL, NULL};
-static F_fragList frag_head = &fragList, frag_tail = &fragList;
+static F_fragList fragList;
+static F_fragList frag_tail;
 
 F_fragList Tr_getResult() {
-	return frag_head->tail;
+	return fragList->tail;
 }
 
 static void Tr_addFrag(frag){
@@ -128,6 +128,10 @@ static void Tr_addFrag(frag){
 	frag_tail = frag_tail->tail;
 }
 
+void Tr_init(){
+	fragList = F_FragList(NULL, NULL);
+	frag_tail = fragList;
+}
 void Tr_procEntryExit(Tr_level level, Tr_exp body, Tr_accessList formals) {
 	F_frag frag = F_ProcFrag(T_Move(T_Temp(F_RAX()), unEx(body)), level->frame);
 	Tr_addFrag(frag);
