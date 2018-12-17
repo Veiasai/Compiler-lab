@@ -110,7 +110,7 @@ struct COL_result COL_color(G_graph ig, Temp_map initial, Temp_tempList regs, Li
 	G_nodeList nodes = G_nodes(ig);
 	enter_hard_regs(coloring);
 	for (; nodes; nodes = nodes->tail) {
-		int *color = G_look(colorTab, nodes->head);
+		int *color = G_look(colorTab, GetAlias(nodes->head));
 		Temp_enter(coloring, Live_gtemp(nodes->head), hard_regs[*color]);
 	}
 
