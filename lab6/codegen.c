@@ -197,11 +197,12 @@ static Temp_temp munchExp(T_exp e){
 		    emit(AS_Oper(inst, TL(d, NULL), NULL, AT(NULL)));
             break;
             }
-        case T_CONST:
+        case T_CONST:{
             char *inst = checked_malloc(MAXLINE * sizeof(char));
 		    sprintf(inst, "movq $%d, `d0", e->u.CONST);
 		    emit(AS_Oper(inst, TL(Temp_newtemp(), NULL), NULL, AT(NULL)));
             break;
+        }
         case T_CALL:{
             Temp_label func = e->u.CALL.fun->u.NAME;
 	        char *inst = checked_malloc(MAXLINE * sizeof(char));
@@ -211,6 +212,7 @@ static Temp_temp munchExp(T_exp e){
 	        sprintf(inst, "call %s", Temp_labelstring(func));
 	        emit(AS_Oper(inst, caller_save, NULL, AT(NULL)));
 	        // emit(AS_Move("movq `s0, `d0", TL(d, NULL), TL(F_RAX(), NULL)));
+            break;
             }
     }
     return d;
@@ -220,10 +222,8 @@ static Temp_temp munchExp(T_exp e){
 static void munchArgs(T_expList l, bool reg){
     if (reg){
         Temp_tempList regs = argregs;
-        for (int i=0;i<F_keep;i++){
-            if (l){
-                emit(AS_Move("movq `s0 `d0", TL(regs->head, NULL), TL(munchExp(l->head), NULL)));
-            }
+        for (int i=0;i<F_keep && l;i++){
+            emit(AS_Move("movq `s0 `d0", TL(regs->head, NULL), TL(munchExp(l->head), NULL)));
             l = l->tail; regs = regs->tail;
         }
         munchArgs(l, FALSE);
