@@ -11,7 +11,7 @@
 #include "liveness.h"
 #include "table.h"
 
-
+static G_node tempToNode(TAB_table tb, Temp_temp t, G_graph g);
 static bool dfs_live(G_nodeList nodes);
 static Temp_tempList unionTempList(Temp_tempList a, Temp_tempList b);
 static Temp_tempList subTempList(Temp_tempList a, Temp_tempList b);
@@ -58,25 +58,17 @@ struct Live_graph Live_liveness(G_graph flow) {
 
 		Temp_tempList outhead = *(Temp_tempList *)G_look(outTab, n);
 		for (Temp_tempList def = FG_def(n); def; def = def->tail) {
-			G_node a = TAB_look(temp_to_node, def->head);
-			if (a == NULL){
-				a = G_Node(lg.graph, def->head);
-				TAB_enter(temp_to_node, def->head, a);
-			}
+			G_node a = tempToNode(temp_to_node, def->head, lg.graph);
 
 			for (Temp_tempList out = outhead; out; out = out->tail) {
-				if (out->head == def->head) 
+				if (out->head == F_FP() || out->head == def->head) 
 					continue;
 				
-				G_node b = TAB_look(temp_to_node, out->head);
-				if (b == NULL){
-					b = G_Node(lg.graph, def->head);
-					TAB_enter(temp_to_node, def->head, b);
-				}
+				G_node b = tempToNode(temp_to_node, out->head, lg.graph);
 
 				if (!G_inNodeList(a, G_adj(b)) && (FG_isMove(n) || !inTempList(FG_use(n), out->head))) {
 					G_addEdge(a, b);
-					G_addEdge(b, a);
+					// G_addEdge(b, a);
 				}
 			}
 
@@ -85,14 +77,10 @@ struct Live_graph Live_liveness(G_graph flow) {
 				continue;
 
 			for (Temp_tempList out = FG_use(n); out; out = out->tail) {
-				if (out->head == def->head)
+				if (out->head == F_FP() || out->head == def->head)
 					continue;
 				
-				G_node b = TAB_look(temp_to_node, out->head);
-				if (b == NULL){
-					b = G_Node(lg.graph, def->head);
-					TAB_enter(temp_to_node, def->head, b);
-				}
+				G_node b = tempToNode(temp_to_node, out->head, lg.graph);
 
 				if (!inMoveList(lg.moves, b, a)) {
 					lg.moves = Live_MoveList(b, a, lg.moves);
@@ -102,6 +90,15 @@ struct Live_graph Live_liveness(G_graph flow) {
 	}
 
 	return lg;
+}
+
+static G_node tempToNode(TAB_table tb, Temp_temp t, G_graph g){
+	G_node a = TAB_look(tb, t);
+	if (!a){
+		a = G_Node(g, t);
+		TAB_enter(tb, t, a);
+	}
+	return a;
 }
 
 static bool dfs_live(G_nodeList nodes){

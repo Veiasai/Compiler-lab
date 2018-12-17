@@ -118,7 +118,9 @@ struct COL_result COL_color(G_graph ig, Temp_map initial, Temp_tempList regs, Li
 
 
 static void Build(G_graph ig) {
+	int i = 0;
 	for (G_nodeList nodes = G_nodes(ig); nodes; nodes = nodes->tail) {
+		// printf("node: %d\n", i++);
 		/* intial degree */
 		int *degree = checked_malloc(sizeof(int));
 		*degree = G_degree(nodes->head);
@@ -425,6 +427,7 @@ static Live_moveList NodeMoves(G_node n) {
 
 // find the original one
 static G_node GetAlias(G_node n) {
+	assert(n);
 	G_node *res = G_look(aliasTab, n);
     if (*res != n) return GetAlias(*res);
     return *res;
@@ -455,6 +458,7 @@ static bool inMoveList(Live_moveList a, G_node src, G_node dst) {
 }
 
 static bool precolored(G_node n) {
+	assert(n);
 	return *(int *)G_look(colorTab, n);
 }
 

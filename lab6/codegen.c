@@ -159,9 +159,9 @@ static Temp_temp munchExp(T_exp e){
 			Temp_temp right = munchExp(e->u.BINOP.right);
             string opinst;
             switch(e->u.BINOP.op){ 
-                case T_plus: opinst = "addq"; break;
-                case T_minus: opinst = "subq"; break;
-                case T_mul: opinst = "imulq"; break;
+                case T_plus: opinst = "addq `s0, `d0"; break;
+                case T_minus: opinst = "subq `s0, `d0"; break;
+                case T_mul: opinst = "imulq `s0, `d0"; break;
                 // TODO:
                 case T_div: 
                 //tiger exclude, TODO:
