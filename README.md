@@ -31,10 +31,20 @@
   - main.c中Tempmap没有声明。
 
 - codegen
-  - 实际上，做到ir-tree的时候，脑海中应该已经没有tiger的语法了，完全语言无关了。但是，tree的可能结构，实在太多了，有很多也是不会在tiger语言种出现的，最后就偷懒不做了。
+  - 实际上，做到ir-tree的时候，脑海中应该已经没有tiger的语法了，完全语言无关了。但是，tree的可能结构，实在太多了，有很多也是不会在tiger语言中出现的，最后就偷懒不做了。
+
+- liveness
+  - movelist如何构造？
 
 ## 参考资料
+
+排名不分先后，感谢救命之恩。
+
+[vinx13/tiger-compiler](https://github.com/vinx13/tiger-compiler)
+
+[Wesley-Jzy/SJTU-COMPILER-LAB-2017](https://github.com/Wesley-Jzy/SJTU-COMPILER-LAB-2017)
 
 [TerCZ/Compiler-labs-2017](https://github.com/TerCZ/Compiler-labs-2017)
 
 [lncoder/tiger](https://github.com/lhcoder/tiger)
+
