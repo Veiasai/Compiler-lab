@@ -55,7 +55,7 @@ G_graph FG_AssemFlowGraph(AS_instrList il, F_frame f) {
         if (cur->head->kind == I_LABEL)
             TAB_enter(label_table, cur->head->u.LABEL.label, n);
     }
-    assert(0);
+  
     // link jmp->label
     G_nodeList nodes = G_nodes(g);
     for (;nodes;nodes=nodes->tail){

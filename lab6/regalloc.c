@@ -41,7 +41,8 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 		
 		if (color.spills == NULL)
 			break;
-	
+
+		assert(0);
 		for (Temp_tempList spills = color.spills; spills; spills = spills->tail) {
 			Temp_temp spill = spills->head;
 			f->local_count += 1;
@@ -55,7 +56,7 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 						Temp_temp temp = Temp_newtemp();
 						replaceTemp(instr->u.OPER.dst, spill, temp);  
 
-						char inst = checked_malloc(MAXLINE*(sizeof(char)));
+						char *inst = checked_malloc(MAXLINE*(sizeof(char)));
 						sprintf(inst, "movq `s0, %s%s(%%rsp)", f->label, postfix);
 						AS_instr store = AS_Oper(String(inst), NULL, Temp_TempList(temp, NULL), NULL);
 
@@ -63,7 +64,7 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 					} else if (hasTemp(instr->u.OPER.src, spill)) {  
 						Temp_temp temp = Temp_newtemp();
 						replaceTemp(instr->u.OPER.src, spill, temp);  
-						char inst = checked_malloc(MAXLINE*(sizeof(char)));
+						char *inst = checked_malloc(MAXLINE*(sizeof(char)));
 						sprintf(inst, "movq %s%s(%%rsp), `d0", f->label, postfix);
 						AS_instr fetch = AS_Oper(String(inst), Temp_TempList(temp, NULL), NULL, NULL);
 
