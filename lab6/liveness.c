@@ -51,16 +51,18 @@ struct Live_graph Live_liveness(G_graph flow) {
 	
 	// add conflict edge
 	lg.graph = G_Graph();
+	lg.moves = NULL;
 	TAB_table temp_to_node = TAB_empty();
 
 	for (G_nodeList nodes = G_nodes(flow); nodes; nodes = nodes->tail) {
 		G_node n = nodes->head;
 
-		Temp_tempList outhead = *(Temp_tempList *)G_look(outTab, n);
 		for (Temp_tempList def = FG_def(n); def; def = def->tail) {
+			if (def->head == F_FP()) continue;
+				
 			G_node a = tempToNode(temp_to_node, def->head, lg.graph);
 
-			for (Temp_tempList out = outhead; out; out = out->tail) {
+			for (Temp_tempList out = *(Temp_tempList *)G_look(outTab, n); out; out = out->tail) {
 				if (out->head == F_FP() || out->head == def->head) 
 					continue;
 				
