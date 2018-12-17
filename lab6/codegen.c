@@ -56,12 +56,8 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
 }
 
 static void emit(AS_instr itr){
-    if (instr_list == NULL) 
-        instr_list = cur = AIL(itr, NULL);
-    else{
-        cur->tail = AIL(itr, cur);
-        cur = cur->tail;
-    }
+    instr_list = AIL(itr, cur);
+    cur = instr_list;
 }
 
 static void  munchStm(T_stm stm){

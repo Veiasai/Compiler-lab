@@ -43,11 +43,10 @@ G_graph FG_AssemFlowGraph(AS_instrList il, F_frame f) {
     G_graph g = G_Graph();
     G_node prev = NULL;
 
-    AS_instrList cur = il;
     TAB_table label_table = TAB_empty();
 
-    for (;cur;cur=cur->tail){
-        G_node n = G_Node(g, (void *) cur->head);
+    for (AS_instrList cur = il;cur;cur=cur->tail){
+        G_node n = G_Node(g, cur->head);
         if (prev) G_addEdge(prev, n);
         if (cur->head->kind == I_OPER && !strncmp("jmp", cur->head->u.OPER.assem, 3))
             prev = NULL;
@@ -56,7 +55,7 @@ G_graph FG_AssemFlowGraph(AS_instrList il, F_frame f) {
         if (cur->head->kind == I_LABEL)
             TAB_enter(label_table, cur->head->u.LABEL.label, n);
     }
-        
+    assert(0);
     // link jmp->label
     G_nodeList nodes = G_nodes(g);
     for (;nodes;nodes=nodes->tail){
@@ -72,5 +71,5 @@ G_graph FG_AssemFlowGraph(AS_instrList il, F_frame f) {
         }
     }
 
-	return NULL;
+	return g;
 }
