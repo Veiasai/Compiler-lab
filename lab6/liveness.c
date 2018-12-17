@@ -58,12 +58,12 @@ struct Live_graph Live_liveness(G_graph flow) {
 		G_node n = nodes->head;
 
 		for (Temp_tempList def = FG_def(n); def; def = def->tail) {
-			if (def->head == F_FP()) continue;
+			// if (def->head == F_FP()) continue;
 				
 			G_node a = tempToNode(temp_to_node, def->head, lg.graph);
 
 			for (Temp_tempList out = *(Temp_tempList *)G_look(outTab, n); out; out = out->tail) {
-				if (out->head == F_FP() || out->head == def->head) 
+				if (out->head == def->head) 
 					continue;
 				
 				G_node b = tempToNode(temp_to_node, out->head, lg.graph);

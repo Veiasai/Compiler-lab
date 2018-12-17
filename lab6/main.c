@@ -23,6 +23,8 @@
 #include "codegen.h"
 #include "regalloc.h"
 
+#define DB 0
+
 extern bool anyErrors;
 
 /*Lab6: complete the function doProc
@@ -93,6 +95,18 @@ static void doProc(FILE *out, F_frame frame, T_stm body)
  //fprintf(stdout, "%s:\n", Temp_labelstring(F_name(frame)));
  //prologue
  fprintf(out, "%s", proc->prolog);
+
+ #if DB
+  AS_instrList t = proc->body;
+  for (;t;t=t->tail)
+    if (t->head->kind == 0)
+      printf("%s\n", t->head->u.OPER.assem);
+    else if (t->head->kind == 1)
+      printf("%s\n", t->head->u.MOVE.assem);
+    else
+      printf("%s\n", t->head->u.LABEL.assem);
+ #endif
+
  AS_printInstrList (out, proc->body,
                        Temp_layerMap(F_tempMap, ra.coloring));
  fprintf(out, "%s", proc->epilog);

@@ -165,6 +165,7 @@ static Temp_temp munchExp(T_exp e){
                 // TODO:
                 case T_div: 
                 //tiger exclude, TODO:
+                    assert(0);
                 case T_and: 
                 case T_or: 
                 case T_lshift: 

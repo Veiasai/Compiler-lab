@@ -60,11 +60,13 @@ static Live_moveList activeMoves;
 
 static Temp_tempList notSpillTemps;
 
+static void enter_hard_regs(Temp_map coloring);
+
 static G_table degreeTab;
 static G_table colorTab;
 static G_table aliasTab;
 
-static char *hard_regs[17] = {"none", "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "rdi", "rbp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "rsp"};
+static char *hard_regs[17] = {"none", "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "%rbp", "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "%rsp"};
 
 struct COL_result COL_color(G_graph ig, Temp_map initial, Temp_tempList regs, Live_moveList moves) {
 	// initial
@@ -106,6 +108,7 @@ struct COL_result COL_color(G_graph ig, Temp_map initial, Temp_tempList regs, Li
 	struct COL_result ret;
 	Temp_map coloring = Temp_empty();
 	G_nodeList nodes = G_nodes(ig);
+	enter_hard_regs(coloring);
 	for (; nodes; nodes = nodes->tail) {
 		int *color = G_look(colorTab, nodes->head);
 		Temp_enter(coloring, Live_gtemp(nodes->head), hard_regs[*color]);
@@ -488,4 +491,23 @@ static G_nodeList G_unionNodeList(G_nodeList u, G_nodeList v){
 		if (!G_inNodeList(nodes->head, u)) 
 		res = G_NodeList(nodes->head, res);
   	return res;
+}
+
+static void enter_hard_regs(Temp_map coloring){
+	Temp_enter(coloring, F_RAX(), hard_regs[1]);
+	Temp_enter(coloring, F_RBX(), hard_regs[2]);
+	Temp_enter(coloring, F_RCX(), hard_regs[3]);
+	Temp_enter(coloring, F_RDX(), hard_regs[4]);
+	Temp_enter(coloring, F_RSI(), hard_regs[5]);
+	Temp_enter(coloring, F_RDI(), hard_regs[6]);
+	Temp_enter(coloring, F_RBP(), hard_regs[7]);
+	Temp_enter(coloring, F_R8(), hard_regs[8]);
+	Temp_enter(coloring, F_R9(), hard_regs[9]);
+	Temp_enter(coloring, F_R10(), hard_regs[10]);
+	Temp_enter(coloring, F_R11(), hard_regs[11]);
+	Temp_enter(coloring, F_R12(), hard_regs[12]);
+	Temp_enter(coloring, F_R13(), hard_regs[13]);
+	Temp_enter(coloring, F_R14(), hard_regs[14]);
+	Temp_enter(coloring, F_R15(), hard_regs[15]);
+	Temp_enter(coloring, F_RSP(), hard_regs[16]);
 }
