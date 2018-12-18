@@ -32,7 +32,7 @@ static const int F_keep = 6;	//number of parameters kept in regs;
 
 //Lab 6: put your code here
 AS_instrList F_codegen(F_frame f, T_stmList stmList) {
-    instr_list = cur = NULL;
+    instr_list = cur = AIL(NULL, NULL);
     frame = f;
 
     // callee save reg
@@ -73,12 +73,11 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
     for(;csr;csr_cur = csr_cur->tail = TL(Temp_newtemp(), NULL), csr=csr->tail)
         emit(AS_Move("movq `s0 `d0", TL(csr->head, NULL), TL(csr_cur->head, NULL)));
     
-    return instr_list;
+    return instr_list->tail;
 }
 
 static void emit(AS_instr itr){
-    instr_list = AIL(itr, cur);
-    cur = instr_list;
+    cur = cur->tail = AIL(itr, NULL);
 }
 
 static void  munchStm(T_stm stm){

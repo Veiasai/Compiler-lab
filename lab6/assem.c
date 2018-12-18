@@ -50,7 +50,8 @@ AS_instr AS_Move(string a, Temp_tempList d, Temp_tempList s) {
 
 AS_instrList AS_InstrList(AS_instr head, AS_instrList tail)
 {AS_instrList p = (AS_instrList) checked_malloc (sizeof *p);
- p->head=head; p->tail=tail;
+ p->head=head; 
+ p->tail=tail;
  return p;
 }
 
