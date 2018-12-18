@@ -8,6 +8,15 @@
 
 
 typedef struct F_access_ *F_access;
+
+struct F_access_ {
+	enum {inFrame, inReg} kind;
+	union {
+		int offset; //inFrame
+		Temp_temp reg; //inReg
+	} u;
+};
+
 typedef struct F_accessList_ *F_accessList;
 
 // the frame->access->head is static link, tail -> others

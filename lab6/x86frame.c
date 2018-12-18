@@ -11,16 +11,6 @@
 
 /*Lab5: Your implementation here.*/
 
-//varibales
-struct F_access_ {
-	enum {inFrame, inReg} kind;
-	union {
-		int offset; //inFrame
-		Temp_temp reg; //inReg
-	} u;
-};
-
-
 
 static F_access InFrame(int offset);
 static F_access InReg(Temp_temp reg);
@@ -51,9 +41,21 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 	for (ptr = formals; ptr; ptr = ptr->tail) {
 		F_access ac = NULL;
 		// head->current, bool escape
-		if (rn < F_keep && !(ptr->head)) {
-			ac = InReg(Temp_newtemp());	
+		if (rn < F_keep) {
+			switch(rn){
+				case 0: ac = InReg(F_RDI()); break;
+				case 1: ac = InReg(F_RSI()); break;
+				case 2: ac = InReg(F_RDX()); break;
+				case 3: ac = InReg(F_RCX()); break;
+				case 4: ac = InReg(F_R8()); break;
+				case 5: ac = InReg(F_R9()); break;
+			}
 			rn++;
+			// escape
+			if (ptr->head){
+				fr->local_count++;
+				ac = InFrame(-(fr->local_count)*F_wordSize);
+			}
 		} else {
 			fn++;
 			ac = InFrame((fn)*F_wordSize);	// return register
@@ -81,11 +83,11 @@ F_accessList F_formals(F_frame f) {
 	return f->formals;
 }
 
-// TODO: every time count++ ?
 F_access F_allocLocal(F_frame f, bool escape) {
-	f->local_count++;
-	if (escape) 
+	if (escape) {
+		f->local_count++;
 		return InFrame(-F_wordSize * (f->local_count));
+	}
 	else 
 		return InReg(Temp_newtemp());
 }

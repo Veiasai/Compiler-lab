@@ -42,6 +42,27 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
     for(;csr;csr_cur = csr_cur->tail = TL(Temp_newtemp(), NULL), csr=csr->tail)
         emit(AS_Move("movq `s0 `d0", TL(csr_cur->head, NULL), TL(csr->head, NULL)));
     
+    // escape switch
+    F_accessList formals = f->formals;
+    int cn = 0;
+    for (int rn=0;rn<6 && formals;rn++){
+        if (formals->head->kind == inFrame){
+            Temp_temp st;
+            switch(rn){
+				case 0: st = F_RDI(); break;
+				case 1: st = F_RSI(); break;
+				case 2: st = F_RDX(); break;
+				case 3: st = F_RCX(); break;
+				case 4: st = F_R8(); break;
+				case 5: st = F_R9(); break;
+			}
+            char * inst = checked_malloc(MAXLINE * sizeof(char));
+            sprintf(inst, "movq `s0 %d(`d0)", - (cn++) * F_wordSize);
+            emit(AS_Oper(inst, TL(F_FP(), NULL), TL(st, NULL), AT(NULL)));
+        }
+        formals = formals->tail;
+    }
+
     while (stmList){
         munchStm(stmList->head);
         stmList = stmList->tail;
@@ -217,9 +238,9 @@ static Temp_temp munchExp(T_exp e){
 
 // WTF？？
 static void munchArgs(T_expList l, bool reg){
-    assert(l);
-    
     if (reg){
+        assert(l);
+
         T_exp slink = l->head;
         l = l->tail;
         // static link
@@ -232,11 +253,9 @@ static void munchArgs(T_expList l, bool reg){
 
         assert(slink);
         emit(AS_Oper("pushq `s0", NULL, TL(munchExp(slink), NULL), AT(NULL)));
-    }else{
-        if (l){
-            munchArgs(l->tail, FALSE);
-            emit(AS_Oper("pushq `s0", NULL, TL(munchExp(l->head), NULL), AT(NULL)));
-        }
+    }else if (l){
+        munchArgs(l->tail, FALSE);
+        emit(AS_Oper("pushq `s0", NULL, TL(munchExp(l->head), NULL), AT(NULL)));
     }
     
     
