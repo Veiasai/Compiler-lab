@@ -138,15 +138,13 @@ static void  munchStm(T_stm stm){
                     string inst = checked_malloc(MAXLINE * sizeof(char));
                     if (dst->u.MEM->u.BINOP.right->kind == T_CONST){
                         T_exp e1 = dst->u.MEM->u.BINOP.left, e2 = src;
-                        sprintf(inst, "movq `s0 %d(`d0)", dst->u.MEM->u.BINOP.right->u.CONST);
-                        emit(AS_Oper(inst, TL(munchExp(e1), NULL), 
-                                                TL(munchExp(e2), NULL), AT(NULL)));
+                        sprintf(inst, "movq `s0 %d(`s1)", dst->u.MEM->u.BINOP.right->u.CONST);
+                        emit(AS_Oper(inst, NULL, TL(munchExp(e2), TL(munchExp(e1), NULL)), AT(NULL)));
                         break;
                     }else if (dst->u.MEM->u.BINOP.left->kind == T_CONST){
                         T_exp e1 = dst->u.MEM->u.BINOP.right, e2 = src;
-                        sprintf(inst, "movq `s0 %d(`d0)", dst->u.MEM->u.BINOP.left->u.CONST);
-                        emit(AS_Oper(inst, TL(munchExp(e1), NULL), 
-                                                TL(munchExp(e2), NULL), AT(NULL)));
+                        sprintf(inst, "movq `s0 %d(`s1)", dst->u.MEM->u.BINOP.left->u.CONST);
+                        emit(AS_Oper(inst, NULL, TL(munchExp(e2), TL(munchExp(e1), NULL)), AT(NULL)));
                         break;
                     }
                     assert(0);
@@ -217,7 +215,7 @@ static Temp_temp munchExp(T_exp e){
         case T_CONST:{
             char *inst = checked_malloc(MAXLINE * sizeof(char));
 		    sprintf(inst, "movq $%d, `d0", e->u.CONST);
-		    emit(AS_Oper(inst, TL(Temp_newtemp(), NULL), NULL, AT(NULL)));
+		    emit(AS_Oper(inst, TL(d, NULL), NULL, AT(NULL)));
             break;
         }
         case T_CALL:{
