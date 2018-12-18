@@ -217,18 +217,27 @@ static Temp_temp munchExp(T_exp e){
 
 // WTF？？
 static void munchArgs(T_expList l, bool reg){
+    assert(l);
+    
     if (reg){
+        T_exp slink = l->head;
+        l = l->tail;
+        // static link
         Temp_tempList regs = argregs;
         for (int i=0;i<F_keep && l;i++){
             emit(AS_Move("movq `s0 `d0", TL(regs->head, NULL), TL(munchExp(l->head), NULL)));
             l = l->tail; regs = regs->tail;
         }
         munchArgs(l, FALSE);
+
+        assert(slink);
+        emit(AS_Oper("pushq `s0", NULL, TL(munchExp(slink), NULL), AT(NULL)));
     }else{
         if (l){
             munchArgs(l->tail, FALSE);
             emit(AS_Oper("pushq `s0", NULL, TL(munchExp(l->head), NULL), AT(NULL)));
         }
     }
+    
     
 }
