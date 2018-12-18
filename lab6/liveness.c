@@ -13,6 +13,7 @@
 
 static G_node tempToNode(TAB_table tb, Temp_temp t, G_graph g);
 static bool dfs_live(G_nodeList nodes);
+static bool loop_live(G_nodeList nodes);
 static Temp_tempList unionTempList(Temp_tempList a, Temp_tempList b);
 static Temp_tempList subTempList(Temp_tempList a, Temp_tempList b);
 static bool isEqual(Temp_tempList a, Temp_tempList b);
@@ -107,7 +108,7 @@ static bool dfs_live(G_nodeList nodes){
 	bool res;
 	if (nodes->tail && nodes->tail->head)
 		res = dfs_live(nodes->tail);
-	else
+	else if (!nodes->head)
 		return FALSE;	// no change
 	
 	G_node n = nodes->head;
@@ -128,6 +129,34 @@ static bool dfs_live(G_nodeList nodes){
 
 	*(Temp_tempList*)G_look(inTab, n) = in;
 	*(Temp_tempList*)G_look(outTab, n) = out;
+
+	return res || cur_res;
+}
+
+static bool loop_live(G_nodeList nodes){
+	if (!nodes)
+		return FALSE;
+	
+	G_node n = nodes->head;
+	Temp_tempList in_old = *(Temp_tempList *)G_look(inTab, n);
+	Temp_tempList out_old = *(Temp_tempList *)G_look(outTab, n);
+
+	Temp_tempList in = NULL, out = NULL;
+
+	G_nodeList succs = G_succ(n);
+	for (; succs; succs = succs->tail) {
+		Temp_tempList in_succ = *(Temp_tempList *)G_look(inTab, succs->head);
+		out = unionTempList(out, in_succ);
+	}
+
+	in = unionTempList(FG_use(n), subTempList(out, FG_def(n)));
+
+	bool cur_res = !isEqual(in_old, in) || !isEqual(out_old, out);
+
+	*(Temp_tempList*)G_look(inTab, n) = in;
+	*(Temp_tempList*)G_look(outTab, n) = out;
+
+	bool res = loop_live(nodes->tail);
 
 	return res || cur_res;
 }
