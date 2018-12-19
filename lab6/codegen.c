@@ -56,9 +56,18 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
 				case 4: st = F_R8(); break;
 				case 5: st = F_R9(); break;
 			}
+            //fix fp
+            Temp_temp d = Temp_newtemp();
+            emit(AS_Oper("movq `s0, `d0", TL(d, NULL), TL(F_RSP(), NULL), AT(NULL)));
             char * inst = checked_malloc(MAXLINE * sizeof(char));
-            sprintf(inst, "movq `s0, %d(`d0)", - (cn++) * F_wordSize);
-            emit(AS_Oper(inst, TL(F_FP(), NULL), TL(st, NULL), AT(NULL)));
+            sprintf(inst, "addq $%sframesize, `d0", Temp_labelstring(F_name(frame)));
+            emit(AS_Oper(inst, TL(d, NULL), NULL, AT(NULL)));
+
+            //use fp
+            inst = checked_malloc(MAXLINE * sizeof(char));
+            cn++;
+            sprintf(inst, "movq `s0, %d(`d0)", (-cn) * F_wordSize);
+            emit(AS_Oper(inst, TL(d, NULL), TL(st, NULL), AT(NULL)));
         }
         formals = formals->tail;
     }

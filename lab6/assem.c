@@ -181,7 +181,7 @@ AS_proc F_procEntryExit3(F_frame f, AS_instrList il){
   proc->prolog = prolog;
 
   char *epilog = checked_malloc(100 * sizeof(char));
-	sprintf(epilog, "addq $%d, %%rsp\n", fsize);
+	sprintf(epilog, "addq $%d, %%rsp\nret\n", fsize);
   proc->epilog = epilog;
 
   proc->body = il;

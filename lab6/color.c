@@ -66,7 +66,7 @@ static G_table degreeTab;
 static G_table colorTab;
 static G_table aliasTab;
 
-static char *hard_regs[18] = {"none", "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "%rbp", "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "%rsp", "%fp"};
+static char *hard_regs[17] = {"none", "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "%rbp", "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "%rsp"};
 
 struct COL_result COL_color(G_graph ig, Temp_map initial, Temp_tempList regs, Live_moveList moves) {
 	// initial
@@ -106,13 +106,12 @@ struct COL_result COL_color(G_graph ig, Temp_map initial, Temp_tempList regs, Li
 	}
 
 	AssignColors(ig);
-	
 	struct COL_result ret;
 	Temp_map coloring = Temp_empty();
 	G_nodeList nodes = G_nodes(ig);
 	// enter_hard_regs(coloring);
 	for (; nodes; nodes = nodes->tail) {
-		int *color = G_look(colorTab, nodes->head);
+		int *color = G_look(colorTab, GetAlias(nodes->head));
 		Temp_enter(coloring, Live_gtemp(nodes->head), hard_regs[*color]);
 	}
 
@@ -162,8 +161,8 @@ static int locate_register(Temp_temp temp) {
 	else if (temp == F_R14()) return 14;
 	else if (temp == F_R15()) return 15;
 
-	else if (temp == F_RSP()) return 16;
-	else if (temp == F_FP()) return 17; 
+	else if (temp == F_RSP() || temp == F_FP()) return 16;
+
 	return 0;
 }
 
@@ -291,8 +290,9 @@ static bool Briggs(G_node u, G_node v) {
 	int k = 0;
 	for (; nodes; nodes = nodes->tail) {
 		G_node n = nodes->head;
-		if (*(int *)G_look(degreeTab, n) >= K)
+		if (*(int *)G_look(degreeTab, n) >= K) {
 			k++;
+		}
 	}
 	return (k < K);
 }
@@ -310,7 +310,10 @@ static void Combine(G_node u, G_node v) {
 	*(G_node *)G_look(aliasTab, v) = u;
 
 	for (G_nodeList t = Adjacent(v); t; t = t->tail) {
-		AddEdge(t->head, u);
+		if (!G_inNodeList(t->head, G_adj(u))) {
+			(*(int *)G_look(degreeTab, u))++;
+			G_addEdge(u, v);
+		}
 		DecrementDegree(t->head);
 	}
 
@@ -376,9 +379,7 @@ static void AssignColors(G_graph ig) {
 	bool okColors[K + 2];
 
 	spilledNodes = NULL;
-	int c = 0;
 	while (selectStack) {
-		printf("node: %d\n", c++);
 		okColors[0] = FALSE;
 		for (int i = 1; i < K + 1; i++) {
 			okColors[i] = TRUE;
