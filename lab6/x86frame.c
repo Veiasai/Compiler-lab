@@ -57,8 +57,7 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 				ac = InFrame(-(fr->local_count)*F_wordSize);
 			}
 		} else {
-			fn++;
-			ac = InFrame((fn)*F_wordSize);	// return register
+			ac = InFrame((fn++)*F_wordSize);	// return register
 		}
 
 		if (head) {
