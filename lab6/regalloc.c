@@ -16,8 +16,6 @@
 
 #define MAXLINE 100
 
-static char * postfix = "size";
-
 static bool hasTemp(Temp_tempList list, Temp_temp temp) {
     for (; list; list = list->tail)
         if (list->head == temp)
@@ -33,6 +31,10 @@ static void replaceTemp(Temp_tempList list, Temp_temp old, Temp_temp new_) {
 
 struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 	//your code here
+	char * fp_fix[100];
+	int fp_fix_num = 0;
+	int fp_fix_off[100];
+
 	Temp_map F_tempMap;
 	G_graph flow_graph;
 	struct Live_graph live_graph;
@@ -45,7 +47,6 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 		if (color.spills == NULL)
 			break;
 
-		assert(0);
 		for (Temp_tempList spills = color.spills; spills; spills = spills->tail) {
 			Temp_temp spill = spills->head;
 			f->local_count += 1;
@@ -60,7 +61,9 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 						replaceTemp(instr->u.OPER.dst, spill, temp);  
 
 						char *inst = checked_malloc(MAXLINE*(sizeof(char)));
-						sprintf(inst, "movq `s0, %s%s(%%rsp)", f->label, postfix);
+						fp_fix[fp_fix_num] = inst;
+						fp_fix_off[fp_fix_num++] = f->local_count;
+						sprintf(inst, "movq `s0, %s(%%rsp)", Temp_labelstring(f->label));
 						AS_instr store = AS_Oper(String(inst), NULL, Temp_TempList(temp, NULL), NULL);
 
 						instrs->tail = AS_InstrList(store, instrs->tail);
@@ -68,7 +71,9 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 						Temp_temp temp = Temp_newtemp();
 						replaceTemp(instr->u.OPER.src, spill, temp);  
 						char *inst = checked_malloc(MAXLINE*(sizeof(char)));
-						sprintf(inst, "movq %s%s(%%rsp), `d0", f->label, postfix);
+						fp_fix[fp_fix_num] = inst;
+						fp_fix_off[fp_fix_num++] = - f->local_count;
+						sprintf(inst, "movq %s(%%rsp), `d0", Temp_labelstring(f->label));
 						AS_instr fetch = AS_Oper(String(inst), Temp_TempList(temp, NULL), NULL, NULL);
 
 						instrs->head = fetch;
@@ -77,6 +82,14 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 				}
 			}
 		}
+	}
+
+	int framesize = f->local_count * F_wordSize;
+	for (int i=0;i<fp_fix_num;i++){
+		if (fp_fix_off[i] > 0)
+			sprintf(fp_fix[i], "movq `s0, %d(%%rsp)", (- (fp_fix_off[i]-1) * F_wordSize) + framesize);
+		else
+			sprintf(fp_fix[i], "movq %d(%%rsp), `d0", ((fp_fix_off[i]+1) * F_wordSize) + framesize);
 	}
 	struct RA_result ret;
 	ret.coloring = color.coloring;

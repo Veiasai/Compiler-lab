@@ -116,7 +116,7 @@ static void doProc(FILE *out, F_frame frame, T_stm body)
 
 void doStr(FILE *out, Temp_label label, string str) {
 	fprintf(out, ".section .rodata\n");
-	fprintf(out, ".%s:\n", S_name(label));
+	fprintf(out, "%s:\n", S_name(label));
 
   // wtf: length ???
 	// int length = *(int *)str;

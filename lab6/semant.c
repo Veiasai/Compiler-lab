@@ -65,7 +65,7 @@ F_fragList SEM_transProg(A_exp exp) {
 	s = set_init();
 	Tr_init();
 	// create main level ? refer to TerCz...why need this...
-    Temp_label func_label = Temp_newlabel();
+    Temp_label func_label = Temp_namedlabel("tigermain");
     Tr_level main_level = Tr_newLevel(Tr_outermost(), func_label, NULL);
     E_enventry fun_entry = E_FunEntry(main_level, func_label, NULL, Ty_Void());  // result type is void
 
