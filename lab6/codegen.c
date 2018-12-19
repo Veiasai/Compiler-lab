@@ -25,7 +25,7 @@ static AS_instrList instr_list, cur;
 static F_frame frame;
 static void munchStm(T_stm stm);
 static Temp_temp munchExp(T_exp exp);
-static void munchArgs(T_expList l, bool reg);
+static int munchArgs(T_expList l, bool reg);
 static void emit(AS_instr itr);     // add itr to instr_list tail
 
 static const int F_keep = 6;	//number of parameters kept in regs;
@@ -197,9 +197,20 @@ static Temp_temp munchExp(T_exp e){
 			break;
             }
         case T_MEM:
-		    emit(AS_Oper("movq (`s0), `d0", TL(d, NULL), 
-                                                TL(munchExp(e->u.MEM), NULL), 
-                                                    AT(NULL)));
+            if (e->u.MEM->kind == T_BINOP){
+                string inst = checked_malloc(MAXLINE * sizeof(char));
+                if (e->u.MEM->u.BINOP.left->kind == T_CONST){
+                    T_exp e1 = e->u.MEM->u.BINOP.right;
+                    sprintf(inst, "movq %d(`s0) `d0", e->u.MEM->u.BINOP.left->u.CONST);
+                    emit(AS_Oper(inst, TL(d, NULL), TL(munchExp(e1), NULL), AT(NULL)));
+                    break;
+                }
+                assert(0);
+            }else{
+		        emit(AS_Oper("movq (`s0), `d0", TL(d, NULL), 
+                                                    TL(munchExp(e->u.MEM), NULL), 
+                                                        AT(NULL)));
+            }
 		    break;
         case T_TEMP:
             return e->u.TEMP;
@@ -222,19 +233,26 @@ static Temp_temp munchExp(T_exp e){
             Temp_label func = e->u.CALL.fun->u.NAME;
 	        char *inst = checked_malloc(MAXLINE * sizeof(char));
 
-	        munchArgs(e->u.CALL.args, TRUE);
+	        int push = munchArgs(e->u.CALL.args, TRUE);
 
 	        sprintf(inst, "call %s", Temp_labelstring(func));
 	        emit(AS_Oper(inst, caller_save, NULL, AT(NULL)));
-	        // emit(AS_Move("movq `s0, `d0", TL(d, NULL), TL(F_RAX(), NULL)));
+
+            // pop stack
+            inst = checked_malloc(MAXLINE * sizeof(char));
+	        sprintf(inst, "addq $%d, %%rsp\n", push*8);
+            emit(AS_Oper(inst, NULL, NULL, AS_Targets(NULL)));
+            
+	        emit(AS_Move("movq `s0, `d0", TL(d, NULL), TL(F_RAX(), NULL)));
             break;
-            }
+        }
     }
     return d;
 }
 
 // WTF？？
-static void munchArgs(T_expList l, bool reg){
+static int munchArgs(T_expList l, bool reg){
+    int cpush = 0;
     if (reg){
         assert(l);
 
@@ -246,14 +264,12 @@ static void munchArgs(T_expList l, bool reg){
             emit(AS_Move("movq `s0 `d0", TL(regs->head, NULL), TL(munchExp(l->head), NULL)));
             l = l->tail; regs = regs->tail;
         }
-        munchArgs(l, FALSE);
-
+        cpush = munchArgs(l, FALSE) + 1;
         assert(slink);
         emit(AS_Oper("pushq `s0", NULL, TL(munchExp(slink), NULL), AT(NULL)));
     }else if (l){
-        munchArgs(l->tail, FALSE);
+        cpush = munchArgs(l->tail, FALSE) + 1;
         emit(AS_Oper("pushq `s0", NULL, TL(munchExp(l->head), NULL), AT(NULL)));
     }
-    
-    
+    return cpush;
 }
