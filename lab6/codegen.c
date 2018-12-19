@@ -43,7 +43,7 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
         emit(AS_Move("movq `s0 `d0", TL(csr_cur->head, NULL), TL(csr->head, NULL)));
     
     // escape switch
-    F_accessList formals = f->formals;
+    F_accessList formals = f->formals->tail;
     int cn = 0;
     for (int rn=0;rn<6 && formals;rn++){
         if (formals->head->kind == inFrame){

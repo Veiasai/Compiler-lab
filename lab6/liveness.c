@@ -50,11 +50,42 @@ struct Live_graph Live_liveness(G_graph flow) {
 
 	while(dfs_live(G_nodes(flow)));
 	
-	// add conflict edge
+	TAB_table temp_to_node = TAB_empty();
 	lg.graph = G_Graph();
 	lg.moves = NULL;
-	TAB_table temp_to_node = TAB_empty();
 
+	/* temp registers */
+	/* enter temp registers */
+	for (G_nodeList nodes = G_nodes(flow); nodes; nodes = nodes->tail) {
+		G_node n = nodes->head;
+		Temp_tempList def = FG_def(n);
+		Temp_tempList out = *(Temp_tempList *)G_look(outTab, n);
+
+		if (!(def && def->head)) {
+			continue;
+		}
+		for (; def; def = def->tail) {
+			if (def->head == F_FP()) {
+				continue;
+			}
+			if (!TAB_look(temp_to_node, def->head)) {
+				G_node tempNode = G_Node(lg.graph, def->head);
+				TAB_enter(temp_to_node, def->head, tempNode);
+			}
+		}
+
+		for (; out; out = out->tail) {
+			if (out->head == F_FP()) {
+				continue;
+			}
+			if (!TAB_look(temp_to_node, out->head)) {
+				G_node tempNode = G_Node(lg.graph, out->head);
+				TAB_enter(temp_to_node, out->head, tempNode);
+			}
+		}
+	}
+
+	// add conflict edge
 	for (G_nodeList nodes = G_nodes(flow); nodes; nodes = nodes->tail) {
 		G_node n = nodes->head;
 
