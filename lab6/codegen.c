@@ -79,7 +79,7 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
 
     csr = callee_save;
     csr_cur = csr_bak;
-    for(;csr;csr_cur = csr_cur->tail = TL(Temp_newtemp(), NULL), csr=csr->tail)
+    for(;csr;csr_cur = csr_cur->tail, csr=csr->tail)
         emit(AS_Move("movq `s0, `d0", TL(csr->head, NULL), TL(csr_cur->head, NULL)));
     
     return instr_list->tail;
