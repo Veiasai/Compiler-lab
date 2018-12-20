@@ -503,10 +503,12 @@ Tr_exp transDec(Tr_level tlevel, Tr_exp texp, S_table venv, S_table tenv, A_dec 
 				E_enventry ent = S_look(venv, fun->name);
 				S_beginScope(venv);
 				A_fieldList el = fun->params;
-				// access update
-				Tr_accessList al = Tr_formals(ent->u.fun.level);
+				// access update, skip link
+				Tr_accessList al = Tr_formals(ent->u.fun.level)->tail;
 				set_reset(s);
+				int elc = 0;
 				for (el = fun->params; el; el = el->tail) {
+					fprintf(stderr, "el :%d\n", elc++);
 					if (!set_push(s, el->head->name))
 						continue;
 					Ty_ty t = S_look(tenv, el->head->typ);

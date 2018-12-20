@@ -39,6 +39,7 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 	int rn = 0, fn = 0;
 	U_boolList ptr;
 	for (ptr = formals; ptr; ptr = ptr->tail) {
+		fprintf(stderr, "rn :%d ptr\n", rn);
 		F_access ac = NULL;
 		// head->current, bool escape
 		if (rn < F_keep) {
@@ -53,6 +54,7 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 			rn++;
 			// escape
 			if (ptr->head){
+				fprintf(stderr, "rn :%d escape\n", rn);
 				fr->local_count++;
 				ac = InFrame(-(fr->local_count)*F_wordSize);
 			}
@@ -68,6 +70,7 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 			tail = head;
 		}
 	}
+	fprintf(stderr, "rn end\n");
 	fr->formals = head;
 
 	return fr;

@@ -104,9 +104,9 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 	int framesize = f->local_count * F_wordSize;
 	for (int i=0;i<fp_fix_num;i++){
 		if (fp_fix_off[i] > 0)
-			sprintf(fp_fix[i], "movq `s0, %d(%%rsp)", (- (fp_fix_off[i]-1) * F_wordSize) + framesize);
+			sprintf(fp_fix[i], "movq `s0, %d(%%rsp)", (- (fp_fix_off[i]) * F_wordSize) + framesize);
 		else
-			sprintf(fp_fix[i], "movq %d(%%rsp), `d0", ((fp_fix_off[i]+1) * F_wordSize) + framesize);
+			sprintf(fp_fix[i], "movq %d(%%rsp), `d0", ((fp_fix_off[i]) * F_wordSize) + framesize);
 	}
 	struct RA_result ret;
 	ret.coloring = color.coloring;
