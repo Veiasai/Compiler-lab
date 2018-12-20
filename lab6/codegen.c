@@ -18,7 +18,7 @@
 #define AT AS_Targets
 #define specialregs TL(F_RAX(), TL(F_RSP(), NULL))
 #define argregs TL(F_RDI(), TL(F_RSI(), TL(F_RDX(), TL(F_RCX(), TL(F_R8(),TL(F_R9(), NULL))))))
-#define caller_save TL(F_RAX(), TL(F_R10(), TL(F_R11(), argregs)))
+#define caller_save TL(F_RAX(), TL(F_R10(), TL(F_R11(), NULL)))
 #define callee_save TL(F_RBX(), TL(F_RBP(), TL(F_R12(), TL(F_R13(), TL(F_R14(),TL(F_R15(), NULL))))))
 
 static AS_instrList instr_list, cur;

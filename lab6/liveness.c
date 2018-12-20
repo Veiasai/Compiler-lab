@@ -82,7 +82,7 @@ struct Live_graph Live_liveness(G_graph flow) {
 			G_node a = TAB_look(temp_to_node, temps->head);
 			G_node b = TAB_look(temp_to_node, next->head);
 			G_addEdge(a, b);
-			// G_addEdge(b, a);
+			G_addEdge(b, a);
 		}
 	}
 
@@ -127,7 +127,7 @@ struct Live_graph Live_liveness(G_graph flow) {
 
 				if (!G_inNodeList(a, G_adj(b)) && (!FG_isMove(n) || !inTempList(FG_use(n), out->head))) {
 					G_addEdge(a, b);
-					// G_addEdge(b, a);
+					G_addEdge(b, a);
 				}
 			}
 
