@@ -155,8 +155,10 @@ static void  munchStm(T_stm stm){
                         sprintf(inst, "movq `s0, %d(`s1)", dst->u.MEM->u.BINOP.left->u.CONST);
                         emit(AS_Oper(inst, NULL, TL(munchExp(e2), TL(munchExp(e1), NULL)), AT(NULL)));
                         break;
+                    }else{
+			            emit(AS_Oper("movq `s0, (`s1)", NULL, TL(munchExp(src), TL(munchExp(dst->u.MEM), NULL)), AT(NULL)));
+                        break;
                     }
-                    assert(0);
                 }else if (src->kind == T_MEM){
                     assert(0);
                 }else{
@@ -190,7 +192,16 @@ static Temp_temp munchExp(T_exp e){
                 case T_minus: opinst = "subq `s0, `d0"; break;
                 case T_mul: opinst = "imulq `s0, `d0"; break;
                 // TODO:
-                case T_div: 
+                case T_div: {
+                    Temp_temp left = munchExp(e->u.BINOP.left);
+                    Temp_temp right = munchExp(e->u.BINOP.right);
+                
+                    emit(AS_Move("movq `s0, `d0", TL(F_RAX(), NULL), TL(left, NULL)));
+                    emit(AS_Oper("cltq", TL(F_RDX(), TL(F_RAX(), NULL)), TL(F_RAX(), NULL), AT(NULL)));
+                    emit(AS_Oper("idivq `s0", TL(F_RDX(), TL(F_RAX(), NULL)), TL(right, TL(F_RDX(), TL(F_RAX(), NULL))), AT(NULL)));
+                    emit(AS_Move("movq `s0, `d0", TL(d, NULL), TL(F_RAX(), NULL)));
+                    return d;
+                }
                 //tiger exclude, TODO:
                     assert(0);
                 case T_and: 
