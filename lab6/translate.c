@@ -177,11 +177,20 @@ Tr_exp Tr_stringExp(string str) {
 
 Tr_exp Tr_callExp(Temp_label fun, Tr_expList el, Tr_level caller, Tr_level callee) {
 	assert(fun);
+	T_exp ex;
 	T_expList args = Tr_transExpList(el);
 
+	if (caller->parent) {
+		ex = T_Call(T_Name(fun), 
+		T_ExpList(trackLink(callee, caller->parent), args));
+	} else {
+		// assert(0);
+		ex = F_externalCall(Temp_labelstring(fun), args);
+	}	
+	
 	// static link
-	args = T_ExpList(trackLink(callee, caller->parent), args);
-	return Tr_Ex(T_Call(T_Name(fun), args));	
+	// args = T_ExpList(trackLink(callee, caller->parent), args);
+	return Tr_Ex(ex);	
 }
 
 
@@ -526,10 +535,7 @@ static Tr_accessList makeFormalList(Tr_level l) {
 
 static T_exp trackLink(Tr_level callee, Tr_level target) {
 	T_exp e = T_Temp(F_FP());
-	if (callee == target) {
-		return e;
-	}
-	while (callee != target) {
+	while (callee && callee != target) {
 		assert(callee);
 		// head->static link
 		F_access ac = F_formals(callee->frame)->head;

@@ -43,7 +43,7 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
         emit(AS_Move("movq `s0, `d0", TL(csr_cur->head, NULL), TL(csr->head, NULL)));
     
     // escape switch
-    F_accessList formals = f->formals->tail;
+    F_accessList formals = f->formals;
     int cn = 0;
     for (int rn=0;rn<6 && formals;rn++){
         if (formals->head->kind == inFrame){
@@ -66,7 +66,7 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
             //use fp
             inst = checked_malloc(MAXLINE * sizeof(char));
             cn++;
-            sprintf(inst, "movq `s0, %d(`d0)", (-cn) * F_wordSize);
+            sprintf(inst, "movq `s0, %d(`d0)", - (cn) * F_wordSize);
             emit(AS_Oper(inst, TL(d, NULL), TL(st, NULL), AT(NULL)));
         }
         formals = formals->tail;
@@ -260,20 +260,21 @@ static Temp_temp munchExp(T_exp e){
 // WTF？？
 static int munchArgs(T_expList l, bool reg){
     int cpush = 0;
-    if (reg){
-        assert(l);
+    if (reg && l){
+        // assert(l);
 
-        T_exp slink = l->head;
-        l = l->tail;
+        // T_exp slink = l->head;
+        // l = l->tail;
         // static link
         Temp_tempList regs = argregs;
         for (int i=0;i<F_keep && l;i++){
             emit(AS_Move("movq `s0, `d0", TL(regs->head, NULL), TL(munchExp(l->head), NULL)));
             l = l->tail; regs = regs->tail;
         }
-        cpush = munchArgs(l, FALSE) + 1;
-        assert(slink);
-        emit(AS_Oper("pushq `s0", NULL, TL(munchExp(slink), NULL), AT(NULL)));
+        // cpush = munchArgs(l, FALSE) + 1;
+        // assert(slink);
+        // emit(AS_Oper("pushq `s0", NULL, TL(munchExp(slink), NULL), AT(NULL)));
+        // emit(AS_Oper("addq $8, `d0", TL(F_RSP(), NULL), NULL, AT(NULL)));
     }else if (l){
         cpush = munchArgs(l->tail, FALSE) + 1;
         emit(AS_Oper("pushq `s0", NULL, TL(munchExp(l->head), NULL), AT(NULL)));
