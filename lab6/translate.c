@@ -360,7 +360,7 @@ Tr_exp Tr_forExp(Tr_level lev, Tr_access iac, Tr_exp lo, Tr_exp hi, Tr_exp body,
 	T_stm limstm = unNx(Tr_assignExp(ex_lim, hi));
 
 	// in while l <= limit
-	T_stm whstm = T_Cjump(T_lt, unEx(ex_i), unEx(ex_lim), NULL, NULL);
+	T_stm whstm = T_Cjump(T_le, unEx(ex_i), unEx(ex_lim), NULL, NULL);
 	patchList trues = PatchList(&whstm->u.CJUMP.true, NULL);
 	patchList falses = PatchList(&whstm->u.CJUMP.false, NULL);
 	struct Cx whcond = unCx(Tr_Cx(trues, falses, whstm));

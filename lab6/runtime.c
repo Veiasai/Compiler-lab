@@ -53,7 +53,8 @@ int main()
    {consts[i].length=1;
     consts[i].chars[0]=i;
    }
- return tigermain(0 /* static link */);
+  tigermain(0 /* static link */);
+  exit(0);
 }
 
 int ord(struct string *s)

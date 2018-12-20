@@ -52,5 +52,6 @@ S_table E_base_venv() {
 	S_enter(t, S_Symbol("concat"), E_FunEntry(Tr_outermost(), Temp_namedlabel("concat"), Ty_TyList(Ty_String(), Ty_TyList(Ty_String(), NULL)), Ty_String()));
 	S_enter(t, S_Symbol("not"), E_FunEntry(Tr_outermost(), Temp_namedlabel("not"), Ty_TyList(Ty_Int(), NULL), Ty_Int()));
 	S_enter(t, S_Symbol("exit"), E_FunEntry(Tr_outermost(), Temp_namedlabel("exit"), Ty_TyList(Ty_Int(), NULL), Ty_Void()));
+	S_enter(t, S_Symbol("printi"), E_FunEntry(Tr_outermost(), Temp_namedlabel("printi"), Ty_TyList(Ty_Int(), NULL), Ty_Void()));
 	return t;
 }

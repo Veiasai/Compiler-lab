@@ -131,16 +131,13 @@ struct COL_result COL_color(G_graph ig, Temp_map initial, Temp_tempList regs, Li
 	ret.coloring = coloring;
 
 	Temp_tempList actual_spills = NULL;
-	if (spilledNodes)
-		printf("xxxx\n");
 
     for (; spilledNodes; spilledNodes = spilledNodes->tail) {
-		printf("sss\n");
         Temp_temp temp = G_nodeInfo(spilledNodes->head);
         actual_spills = Temp_TempList(temp, actual_spills);
     }
 
-	ret.spills = spilledNodes;
+	ret.spills = actual_spills;
 	return ret;
 }
 
@@ -510,7 +507,6 @@ static void AssignColors(G_graph ig)
 
 		if (realSpill)
 		{
-			printf("realspill\n");
 			spilledNodes = G_NodeList(n, spilledNodes);
 		}
 		else
