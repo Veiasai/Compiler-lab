@@ -77,7 +77,9 @@ F_accessList F_formals(F_frame f) {
 	return f->formals;
 }
 
+static int db = 0;
 F_access F_allocLocal(F_frame f, bool escape) {
+	fprintf(stderr, "alloc :%d %d\n", db++, escape);
 	if (escape) {
 		f->local_count++;
 		return InFrame(-F_wordSize * (f->local_count));
