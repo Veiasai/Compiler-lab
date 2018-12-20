@@ -16,9 +16,9 @@
 
 #define MAXLINE 100
 
-static char * fp_fix[100];
+static char * fp_fix[1000];
 static int fp_fix_num;
-static int fp_fix_off[100];
+static int fp_fix_off[1000];
 
 static Temp_tempList notSpillTemps;
 
@@ -87,6 +87,7 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 	struct Live_graph live_graph;
 	struct COL_result color;
 	notSpillTemps = NULL;
+	fp_fix_num = 0;
 	while(1){
 		flow_graph = FG_AssemFlowGraph(il, f);
 		live_graph = Live_liveness(flow_graph);
@@ -97,7 +98,6 @@ struct RA_result RA_regAlloc(F_frame f, AS_instrList il) {
 
 		notSpillTemps = NULL;
 		printf("spill start\n");
-		fp_fix_num = 0;
 		il = rewriteProgram(f, il, color.spills);
 	}
 

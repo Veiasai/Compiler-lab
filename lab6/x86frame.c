@@ -43,21 +43,13 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
 		F_access ac = NULL;
 		// head->current, bool escape
 		if (rn < F_keep) {
-			switch(rn){
-				case 0: ac = InReg(F_RDI()); break;
-				case 1: ac = InReg(F_RSI()); break;
-				case 2: ac = InReg(F_RDX()); break;
-				case 3: ac = InReg(F_RCX()); break;
-				case 4: ac = InReg(F_R8()); break;
-				case 5: ac = InReg(F_R9()); break;
-			}
-			rn++;
-			// escape
 			if (ptr->head){
 				fprintf(stderr, "rn :%d escape\n", rn);
 				fr->local_count++;
 				ac = InFrame(-(fr->local_count)*F_wordSize);
-			}
+			}else
+				ac = InReg(Temp_newtemp());
+			rn++;
 		} else {
 			ac = InFrame((fn++)*F_wordSize);
 		}

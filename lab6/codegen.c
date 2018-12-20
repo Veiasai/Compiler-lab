@@ -164,8 +164,8 @@ static void  munchStm(T_stm stm){
                 }else if (src->kind == T_MEM){
                     assert(0);
                 }else{
-                    emit(AS_Oper("movq `s0, (`d0)", TL(munchExp(dst), NULL), 
-                                                TL(munchExp(src), NULL), AT(NULL)));
+                    emit(AS_Oper("movq `s0, (`s1)", NULL, TL(munchExp(src), 
+                                                TL(munchExp(dst->u.MEM), NULL)), AT(NULL)));
                     break;
                 }
             }else if (dst->kind == T_TEMP){
