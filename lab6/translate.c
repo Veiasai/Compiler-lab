@@ -375,7 +375,7 @@ Tr_exp Tr_forExp(Tr_level lev, Tr_access iac, Tr_exp lo, Tr_exp hi, Tr_exp body,
 	// do body
 	T_stm dobody = T_Seq(unNx(body), 
 						  T_Move(unEx(ex_i), 
-								 T_Binop(T_plus, unEx(ex_lim), T_Const(1))));
+								 T_Binop(T_plus, unEx(ex_i), T_Const(1))));
 
 	// as "while", goto lbBody is redundant
 	T_stm circle = T_Seq(T_Label(lbTest),
