@@ -127,7 +127,10 @@ static void Build(G_graph ig) {
 		// printf("node: %d\n", i++);
 		/* intial degree */
 		int *degree = checked_malloc(sizeof(int));
-		*degree = G_degree(nodes->head);
+		*degree = 0;
+		for (G_nodeList cur = G_succ(nodes->head); cur; cur = cur->tail) {
+			(*degree)++;
+		}
 		G_enter(degreeTab, nodes->head, degree);
 
 		/* intial color */
@@ -263,7 +266,7 @@ static void Coalesce() {
 }
 
 static G_nodeList Adjacent(G_node n) {
-	return G_subNodeList(G_subNodeList(G_adj(n), selectStack), coalescedNodes);
+	return G_subNodeList(G_subNodeList(G_succ(n), selectStack), coalescedNodes);
 }
 
 static void AddWorkList(G_node u) {
@@ -310,10 +313,7 @@ static void Combine(G_node u, G_node v) {
 	*(G_node *)G_look(aliasTab, v) = u;
 
 	for (G_nodeList t = Adjacent(v); t; t = t->tail) {
-		if (!G_inNodeList(t->head, G_adj(u))) {
-			(*(int *)G_look(degreeTab, u))++;
-			G_addEdge(u, v);
-		}
+		AddEdge(t->head, u);
 		DecrementDegree(t->head);
 	}
 
@@ -387,7 +387,7 @@ static void AssignColors(G_graph ig) {
 
 		G_node n = selectStack->head;
 		selectStack = selectStack->tail;
-		for (G_nodeList adjs = G_adj(n); adjs; adjs = adjs->tail) {
+		for (G_nodeList adjs = G_succ(n); adjs; adjs = adjs->tail) {
 			int *color = G_look(colorTab, GetAlias(adjs->head));
 			okColors[*color] = FALSE;
 		}
@@ -402,7 +402,7 @@ static void AssignColors(G_graph ig) {
 		}
 
 		if (realSpill) {
-			spilledNodes = G_NodeList(n, spilledNodes);
+			// spilledNodes = G_NodeList(n, spilledNodes);
 		} else {
 			*(int *)G_look(colorTab, n) = i;
 		}
