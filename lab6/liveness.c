@@ -53,6 +53,38 @@ struct Live_graph Live_liveness(G_graph flow) {
 	TAB_table temp_to_node = TAB_empty();
 	lg.graph = G_Graph();
 	lg.moves = NULL;
+	/* enter hard registers and addEdge */
+	Temp_tempList hardRegs = 
+			Temp_TempList(F_RAX(),
+			Temp_TempList(F_RBX(),
+			Temp_TempList(F_RCX(),
+			Temp_TempList(F_RDX(),
+			Temp_TempList(F_RSI(),
+			Temp_TempList(F_RSI(),
+			Temp_TempList(F_RBP(),
+			Temp_TempList(F_R8(),
+			Temp_TempList(F_R9(),
+			Temp_TempList(F_R10(),
+			Temp_TempList(F_R11(),
+			Temp_TempList(F_R12(),
+			Temp_TempList(F_R13(),
+			Temp_TempList(F_R14(),
+			Temp_TempList(F_R15(),
+			Temp_TempList(F_RSP(), NULL))))))))))))))));
+
+	for (Temp_tempList temps = hardRegs; temps; temps = temps->tail) {
+		G_node tempNode = G_Node(lg.graph, temps->head);
+		TAB_enter(temp_to_node, temps->head, tempNode);
+	}
+
+	for (Temp_tempList temps = hardRegs; temps; temps = temps->tail) {
+		for (Temp_tempList next = temps->tail; next; next = next->tail) {
+			G_node a = TAB_look(temp_to_node, temps->head);
+			G_node b = TAB_look(temp_to_node, next->head);
+			G_addEdge(a, b);
+			// G_addEdge(b, a);
+		}
+	}
 
 	/* temp registers */
 	/* enter temp registers */
@@ -65,9 +97,6 @@ struct Live_graph Live_liveness(G_graph flow) {
 			continue;
 		}
 		for (; def; def = def->tail) {
-			if (def->head == F_FP()) {
-				continue;
-			}
 			if (!TAB_look(temp_to_node, def->head)) {
 				G_node tempNode = G_Node(lg.graph, def->head);
 				TAB_enter(temp_to_node, def->head, tempNode);
@@ -75,9 +104,6 @@ struct Live_graph Live_liveness(G_graph flow) {
 		}
 
 		for (; out; out = out->tail) {
-			if (out->head == F_FP()) {
-				continue;
-			}
 			if (!TAB_look(temp_to_node, out->head)) {
 				G_node tempNode = G_Node(lg.graph, out->head);
 				TAB_enter(temp_to_node, out->head, tempNode);
@@ -90,7 +116,6 @@ struct Live_graph Live_liveness(G_graph flow) {
 		G_node n = nodes->head;
 
 		for (Temp_tempList def = FG_def(n); def; def = def->tail) {
-			// if (def->head == F_FP()) continue;
 				
 			G_node a = tempToNode(temp_to_node, def->head, lg.graph);
 
@@ -100,7 +125,7 @@ struct Live_graph Live_liveness(G_graph flow) {
 				
 				G_node b = tempToNode(temp_to_node, out->head, lg.graph);
 
-				if (!G_inNodeList(a, G_adj(b)) && (FG_isMove(n) || !inTempList(FG_use(n), out->head))) {
+				if (!G_inNodeList(a, G_adj(b)) && (!FG_isMove(n) || !inTempList(FG_use(n), out->head))) {
 					G_addEdge(a, b);
 					// G_addEdge(b, a);
 				}
