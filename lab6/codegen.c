@@ -46,16 +46,16 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
     F_accessList formals = f->formals;
     int cn = 0;
     for (int rn=0;rn<6 && formals;rn++){
+        Temp_temp st;
+        switch(rn){
+            case 0: st = F_RDI(); break;
+            case 1: st = F_RSI(); break;
+            case 2: st = F_RDX(); break;
+            case 3: st = F_RCX(); break;
+            case 4: st = F_R8(); break;
+            case 5: st = F_R9(); break;
+        }
         if (formals->head->kind == inFrame){
-            Temp_temp st;
-            switch(rn){
-				case 0: st = F_RDI(); break;
-				case 1: st = F_RSI(); break;
-				case 2: st = F_RDX(); break;
-				case 3: st = F_RCX(); break;
-				case 4: st = F_R8(); break;
-				case 5: st = F_R9(); break;
-			}
             //fix fp
             Temp_temp d = Temp_newtemp();
             emit(AS_Oper("movq `s0, `d0", TL(d, NULL), TL(F_RSP(), NULL), AT(NULL)));
@@ -68,6 +68,8 @@ AS_instrList F_codegen(F_frame f, T_stmList stmList) {
             cn++;
             sprintf(inst, "movq `s0, %d(`d0)", - (cn) * F_wordSize);
             emit(AS_Oper(inst, TL(d, NULL), TL(st, NULL), AT(NULL)));
+        }else{
+            emit(AS_Move("movq `s0, `d0", TL(formals->head->u.reg, NULL), TL(st, NULL)));
         }
         formals = formals->tail;
     }
