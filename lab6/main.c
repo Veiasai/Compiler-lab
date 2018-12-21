@@ -87,6 +87,7 @@ static void doProc(FILE *out, F_frame frame, T_stm body)
 
  string procName = S_name(F_name(frame));
  fprintf(out, ".text\n");
+ fprintf(out, ".set %sframesize, %d\n", Temp_labelstring(frame->label), frame->local_count*8);
  fprintf(out, ".globl %s\n", procName);
  fprintf(out, ".type %s, @function\n", procName);
  fprintf(out, "%s:\n", procName);

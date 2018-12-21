@@ -221,7 +221,12 @@ static Temp_temp munchExp(T_exp e){
                 char * inst = checked_malloc(MAXLINE * sizeof(char));
                 sprintf(inst, "movq %sframesize + %d(`s0), `d0", Temp_labelstring(F_name(frame)), e->u.MEM->u.BINOP.left->u.CONST);
                 emit(AS_Oper(inst, TL(d, NULL), TL(F_RSP(), NULL), AT(NULL)));
-            }else
+            }else if (e->u.MEM->kind == T_BINOP && e->u.MEM->u.BINOP.left->kind == T_CONST){
+                char * inst = checked_malloc(MAXLINE * sizeof(char));
+                sprintf(inst, "movq %d(`s0), `d0", e->u.MEM->u.BINOP.left->u.CONST);
+                emit(AS_Oper(inst, TL(d, NULL), TL(munchExp(e->u.MEM->u.BINOP.right), NULL), AT(NULL)));
+            }
+            else
             emit(AS_Oper("movq (`s0), `d0", TL(d, NULL), 
                                                 TL(munchExp(e->u.MEM), NULL), 
                                                     AT(NULL)));
