@@ -183,7 +183,7 @@ AS_proc F_procEntryExit3(F_frame f, AS_instrList il){
   int fsize = f->local_count*8;
 	AS_proc proc = checked_malloc(sizeof(*proc));
   char *prolog = checked_malloc(100 * sizeof(char));
-	sprintf(prolog, "%sframesize = %d\nsubq $%d, %%rsp\n", Temp_labelstring(f->label), fsize, fsize);
+	sprintf(prolog, "subq $%d, %%rsp\n", fsize);
   proc->prolog = prolog;
 
   char *epilog = checked_malloc(100 * sizeof(char));
