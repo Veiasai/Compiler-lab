@@ -133,12 +133,6 @@ void AS_print(FILE *out, AS_instr i, Temp_map m)
     /* i->u.LABEL->label); */
     break;
   case I_MOVE: {
-    /* remove "movl samereg, samereg" */
-  if (i->u.MOVE.dst && i->u.MOVE.src) {
-    if (strcmp(Temp_look(m, i->u.MOVE.dst->head), Temp_look(m, i->u.MOVE.src->head)) == 0) {
-      break;
-    }
-  }
 	if ((i->u.MOVE.dst == NULL) && (i->u.MOVE.src == NULL)) {
 		char *src = strchr(i->u.MOVE.assem, '%');
 		if (src != NULL) {
@@ -160,6 +154,21 @@ void AS_print(FILE *out, AS_instr i, Temp_map m)
 void AS_printInstrList (FILE *out, AS_instrList iList, Temp_map m)
 {
   for (; iList; iList=iList->tail) {
+     /* remove jmp label \n label: */
+     AS_instr i = iList->head;
+    if (i->kind == I_OPER && !strncmp(i->u.OPER.assem, "jmp", 3) && iList->tail) {
+      fprintf(stderr, "remove jmp : %s\n", i->u.OPER.assem);
+      AS_instr next = iList->tail->head;
+      if (next && next->kind == I_LABEL && i->u.OPER.jumps->labels->head == next->u.LABEL.label)
+        continue;
+    }
+
+     /* remove "movq samereg, samereg" */
+    if (i->kind == I_MOVE && i->u.MOVE.dst && i->u.MOVE.src) {
+      if (strcmp(Temp_look(m, i->u.MOVE.dst->head), Temp_look(m, i->u.MOVE.src->head)) == 0) {
+        continue;
+      }
+    }
     AS_print(out, iList->head, m);
   }
   fprintf(out, "\n");

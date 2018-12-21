@@ -37,7 +37,17 @@
   - 关于loop，非常令人困惑，loop cond本来写的小于，然后又改成了小于等于，因为from 0 to 7是跑8次。但是这样写汇编是有溢出风险的，只是我也不知道 from minint to maxint要怎么实现，感觉永远退不出来。
 
 - frame
-  - 关于fp的识别还有待优化。
+  - 关于fp的识别遗留了bug，就是判断条件比较冗长，我简化了，因为我知道我自己写的translate不会生成那些边界情况，但是实际上这是不对的，应该检测到所有可能的ir-tree结构。
+  - 寻址常数不用加$符号。
+
+- jmp和move
+  - 删除的条件也很冗长，而且结构还不太好，写在了AS_printlist里面。
+
+## 完结感言
+
+- 虽然我也不知道我做了什么，书上的伪代码某些地方非常诡异，没有代码只有说明的部分则晦涩难懂，regalloc实现上则参考了前人经验，反正乱棍打死老师傅，这个代码跑起来了。
+
+- 生成的汇编还挺好看，很有成就感=，=！！
 
 ## 参考资料
 
@@ -50,4 +60,3 @@
 [TerCZ/Compiler-labs-2017](https://github.com/TerCZ/Compiler-labs-2017)
 
 [lncoder/tiger](https://github.com/lhcoder/tiger)
-
