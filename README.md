@@ -33,8 +33,11 @@
 - codegen
   - 实际上，做到ir-tree的时候，脑海中应该已经没有tiger的语法了，完全语言无关了。但是，tree的可能结构，实在太多了，有很多也是不会在tiger语言中出现的，最后就偷懒不做了。
 
-- liveness
-  - movelist如何构造？
+- translate
+  - 关于loop，非常令人困惑，loop cond本来写的小于，然后又改成了小于等于，因为from 0 to 7是跑8次。但是这样写汇编是有溢出风险的，只是我也不知道 from minint to maxint要怎么实现，感觉永远退不出来。
+
+- frame
+  - 关于fp的识别还有待优化。
 
 ## 参考资料
 
