@@ -59,7 +59,7 @@ struct Live_graph Live_liveness(G_graph flow) {
 			Temp_TempList(F_RBX(),
 			Temp_TempList(F_RCX(),
 			Temp_TempList(F_RDX(),
-			Temp_TempList(F_RSI(),
+			Temp_TempList(F_RDI(),
 			Temp_TempList(F_RSI(),
 			Temp_TempList(F_RBP(),
 			Temp_TempList(F_R8(),
@@ -83,31 +83,6 @@ struct Live_graph Live_liveness(G_graph flow) {
 			G_node b = TAB_look(temp_to_node, next->head);
 			G_addEdge(a, b);
 			G_addEdge(b, a);
-		}
-	}
-
-	/* temp registers */
-	/* enter temp registers */
-	for (G_nodeList nodes = G_nodes(flow); nodes; nodes = nodes->tail) {
-		G_node n = nodes->head;
-		Temp_tempList def = FG_def(n);
-		Temp_tempList out = *(Temp_tempList *)G_look(outTab, n);
-
-		if (!(def && def->head)) {
-			continue;
-		}
-		for (; def; def = def->tail) {
-			if (!TAB_look(temp_to_node, def->head)) {
-				G_node tempNode = G_Node(lg.graph, def->head);
-				TAB_enter(temp_to_node, def->head, tempNode);
-			}
-		}
-
-		for (; out; out = out->tail) {
-			if (!TAB_look(temp_to_node, out->head)) {
-				G_node tempNode = G_Node(lg.graph, out->head);
-				TAB_enter(temp_to_node, out->head, tempNode);
-			}
 		}
 	}
 
